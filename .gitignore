@@ -1,0 +1,10 @@
+.git/
+.next/
+_backup/
+cache/
+node_modules/
+out/
+test/
+.env
+.eslintrc.json
+.htaccess
