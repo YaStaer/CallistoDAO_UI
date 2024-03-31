@@ -75,7 +75,7 @@ export default function DAO() {
                 <img src={`images_tg/${userDao[4]}.jpg`} className="my-1 hidden md:block float-left h-[32px] rounded-full"></img>
                 <div className="font-bold px-2">{userDao[4]}</div>
                 <div className="px-3 text-[12px] grid grid-cols-2">
-                  <div className="col-start-1">Total votes</div>
+                  <div className="col-start-1">Proposals</div>
                   <div className="ml-2 font-bold col-start-2">{totalVoting - Number(userDao[2])}</div>
                   <div className="col-start-1">Participated</div>
                   <div className="ml-2 font-bold col-start-2">{userDao[1]}</div>
