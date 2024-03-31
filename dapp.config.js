@@ -1,41 +1,21 @@
 const netSettings = {
-  '0x50f9': {
     name: 'Callisto Testnet',
     logo: '/images/net_img/CLO.png',
     ticker: 'CLO',
     rpc: 'https://testnet-rpc.callisto.network/',
-    wraped: ['0xbd2D3BCe975FD72E44A73cC8e834aD1B8441BdDa', 'CLO'],
-    wraped_bots: ['0xbd2D3BCe975FD72E44A73cC8e834aD1B8441BdDa', 'WCLO'],
-    stable: ['0x9a0a2D4498182D4466901A39a97feB16AE26d01a', 'USDT'],
-    intraEX_arbitrage: '0x47a00226ED1cb45BaF041F736E281AA01cDbee1B',
     contracts: {
-      balances: {
-        title: '2bearsBalances',
-        description: '2bears balances',
-        contractAddress: '0x1501Bffb3D83239214AE55eCE3a4ccd40092c922'
+      treasury: {
+        title: 'Treasury',
+        description: 'Callisto treasury',
+        contractAddress: '0xfD2D4C6C1a8272177729A6D7458984264F89e54c'
       },
-      orders: {
-        title: '2bearsOrders',
-        description: '2bears orders',
-        contractAddress: '0xe8F6F27621E94CCDD70FE5555e6c6d24257b99FB'
-      },
-      commission: {
-        title: '2bearsCommision',
-        description: '2bears commission',
-        contractAddress: '0x1b6c9df704b765BEac653BA03e61B477fC24dF57'
-      },
-      bots: {
-        title: '2bearsBots',
-        description: '2bears bots',
-        contractAddress: '0x69b78bF6300a39D186C7850A46ea6CA261c265c3'
-      },
-      botshelp: {
-        title: '2bearsBotsHelp',
-        description: '2bears bots help',
-        contractAddress: '0xECB37B02ea61DEcA8976F8316aDAACCdD7626902'
+      governanceDAO: {
+        title: 'GovernanceDAO',
+        description: 'Callisto GovernanceDAO',
+        contractAddress: '0x0A35C34Af123c423E140AB7C00158eb1B41AB1B5'
       }
     }
-  },
+  }
   // '0x334': {
   //   name: 'Callisto Mainnet',
   //   logo: '/images/net_img/CLO.png',
@@ -73,7 +53,7 @@ const netSettings = {
   //     }
   //   }
   // }
-}
+// }
 
 // const defaultChain = '0x334'
 

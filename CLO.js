@@ -1,7 +1,7 @@
 export default `
-xml version="1.0" encoding="utf-8"?>
-<svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
-	 width="86.726px" height="99px" viewBox="0 0 86.726 99" enable-background="new 0 0 86.726 99" xml:space="preserve">
+<xml version="1.0" encoding="utf-8"?>
+<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+	 width="20px" height="20px" viewBox="0 0 86.726 99">
 <path fill-rule="evenodd" clip-rule="evenodd" fill="#1FAE52" d="M84.786,52.729l0.001,0.003L49.083,73.313l-0.013-0.022
 	c-0.196,0.132-0.432,0.209-0.686,0.209c-0.525,0-0.972-0.33-1.148-0.792L37.014,55.242c-0.092-0.128-0.147-0.285-0.147-0.455
 	c0-0.432,0.351-0.783,0.782-0.783c0.256,0,11.046-0.016,11.046-0.016c0.359,0.03,0.642,0.33,0.641,0.697

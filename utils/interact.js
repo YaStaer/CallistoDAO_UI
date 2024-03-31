@@ -1,8 +1,10 @@
+import { Wallet } from 'ethers'
 import { netSettings } from '../dapp.config'
 import { BN } from 'bn.js'
 
 const Contract = require('web3-eth-contract')
 export const Web3 = require('web3')
+export const web3 = new Web3(netSettings.rpc)
 
 const gas_percent = 120
 
@@ -65,3 +67,18 @@ export function humanDate(UNIX_timestamp) {
   return time
 }
 
+export const getUserDAO = async wallet => {
+  const contractGovernanceDAO = require('../artifacts/contracts/GovernanceDAO.sol/GovernanceDAO.json')
+  const GovernanceDAOcontract = new web3.eth.Contract(contractGovernanceDAO.abi, netSettings.contracts.governanceDAO.contractAddress)
+  const user = await GovernanceDAOcontract.methods.getUser(wallet.accounts[0].address).call()
+  console.log(user)
+  return user[0] != '0' ? user : ''
+}
+
+export const getTotalVoting = async () => {
+  const contractGovernanceDAO = require('../artifacts/contracts/GovernanceDAO.sol/GovernanceDAO.json')
+  const GovernanceDAOcontract = new web3.eth.Contract(contractGovernanceDAO.abi, netSettings.contracts.governanceDAO.contractAddress)
+  const total = await GovernanceDAOcontract.methods.total_voting().call()
+  console.log(total)
+  return total
+}
