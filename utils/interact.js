@@ -5,6 +5,8 @@ import { BN } from 'bn.js'
 const Contract = require('web3-eth-contract')
 export const Web3 = require('web3')
 export const web3 = new Web3(netSettings.rpc)
+const contractGovernanceDAO = require('../artifacts/contracts/GovernanceDAO.sol/GovernanceDAO.json')
+const GovernanceDAOcontract = new web3.eth.Contract(contractGovernanceDAO.abi, netSettings.contracts.governanceDAO.contractAddress)
 
 const gas_percent = 120
 
@@ -68,17 +70,49 @@ export function humanDate(UNIX_timestamp) {
 }
 
 export const getUserDAO = async wallet => {
-  const contractGovernanceDAO = require('../artifacts/contracts/GovernanceDAO.sol/GovernanceDAO.json')
-  const GovernanceDAOcontract = new web3.eth.Contract(contractGovernanceDAO.abi, netSettings.contracts.governanceDAO.contractAddress)
   const user = await GovernanceDAOcontract.methods.getUser(wallet.accounts[0].address).call()
-  console.log(user)
   return user[0] != '0' ? user : ''
 }
 
+export const getUsersList = async () => {
+  const resp = await GovernanceDAOcontract.methods.getUsersList(1, 100).call()
+  const id = 0
+  const users = {}
+  while (Number(resp[id][0])) {
+    users[resp[id][3]] = {
+      index: resp[id][0],
+      votes: resp[id][1],
+      entered: resp[id][2],
+      address: resp[id][3],
+      nickname: resp[id][4]
+    }
+    users[resp[id][4]] = {
+      index: resp[id][0],
+      votes: resp[id][1],
+      entered: resp[id][2],
+      address: resp[id][3],
+      nickname: resp[id][4]
+    }
+    id ++
+  }
+  console.log(users)
+  return users
+}
+
 export const getTotalVoting = async () => {
-  const contractGovernanceDAO = require('../artifacts/contracts/GovernanceDAO.sol/GovernanceDAO.json')
-  const GovernanceDAOcontract = new web3.eth.Contract(contractGovernanceDAO.abi, netSettings.contracts.governanceDAO.contractAddress)
   const total = await GovernanceDAOcontract.methods.total_voting().call()
-  console.log(total)
   return total
+}
+
+export const getProposalsList = async id => {
+  const resp = await GovernanceDAOcontract.methods.getProposalsList(id, 5).call()
+  const proposals = []
+  for (const i = 0; i < resp.length; i ++) {
+    if (resp[i][0] != "0") {
+      proposals.push(resp[i])
+    }
+  }
+  const result = proposals.reverse()
+  console.log(result)
+  return result
 }
