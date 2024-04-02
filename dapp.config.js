@@ -7,12 +7,12 @@ const netSettings = {
       treasury: {
         title: 'Treasury',
         description: 'Callisto treasury',
-        contractAddress: '0xfD2D4C6C1a8272177729A6D7458984264F89e54c'
+        contractAddress: '0xf82533EC6F73C56549e21B24a93B9f1612A99C67'
       },
       governanceDAO: {
         title: 'GovernanceDAO',
         description: 'Callisto GovernanceDAO',
-        contractAddress: '0x0A35C34Af123c423E140AB7C00158eb1B41AB1B5'
+        contractAddress: '0xb356A5a5710Cac1677854f1b95608D1d4B4B417d'
       }
     }
   }

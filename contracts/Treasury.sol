@@ -4,6 +4,8 @@
 pragma solidity ^0.8.16;
 
 interface IERC20 {
+    function symbol() external view returns (string memory);
+    function decimals() external view returns (uint8);
     function balanceOf(address account) external view returns (uint256);
     function transfer(address to, uint256 value) external returns (bool);
 }
@@ -112,10 +114,12 @@ contract Treasury {
     }
 
 
-    function getBalanceToken(address _token) public view returns (uint256) // Возвращаем текущий баланс контракта в запрошенном токене
+    function getBalanceToken(address _token) public view returns (uint256, uint8, string memory) // Возвращаем текущий баланс контракта в запрошенном токене, а также количество десятичных знаков и символ данного токена
     {   
         uint _balance = IERC20(_token).balanceOf(address(this)); // получаем баланс этого контракта в запрошенном токене
-        return (_balance);
+        uint8 _decimal = IERC20(_token).decimals(); // получаем количество десятичных знаков у запрошенного токена
+        string memory _symb = IERC20(_token).symbol(); // Получаем символ токена
+        return (_balance, _decimal, _symb);
     }
 
 

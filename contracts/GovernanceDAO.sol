@@ -203,9 +203,14 @@ contract GovernanceDAO {
         return (proposals[_id]);
     }
 
-    function getProposalsList(uint _start_ID, uint _amount) public view returns (ProposalData[] memory) { // Возвращаем данные нескольких предложений из списка
-        ProposalData[] memory _result = new ProposalData[](_amount);  
-        for(uint i; i < _amount; i++) _result[i] = getProposal(_start_ID++);
+    function getProposalsList(uint _start_ID, uint _amount) public view returns (ProposalData[] memory) { // Возвращаем данные нескольких предложений из списка от _start_ID к более старым
+        _start_ID = ((_start_ID == 0) || (_start_ID > total_voting)) ? total_voting : _start_ID; // если запрашивается индекс = 0 или индекс превышающий последнее предложение, то возврат предложений делается от последнего предложения
+        ProposalData[] memory _result = new ProposalData[](_amount); 
+
+        for(uint i; i < _amount; i++){
+            if(_start_ID == 0) break; // выход, если все предложения обработаны досрочно
+            _result[i] = getProposal(_start_ID--);
+        } 
         return (_result);
     }
 
@@ -213,20 +218,21 @@ contract GovernanceDAO {
         return (rewards[_id][_user]);
     }
 
-    function getClaimList(address _user, uint _start_ID, uint _amount) public view returns (uint [] memory, bool [] memory) { // Возвращаем массив предложений и массив наград для указанного адреса
+    function getClaimList(address _user, uint _start_ID, uint _amount) public view returns (uint [] memory, bool [] memory) { // Возвращаем массив предложений и массив наград для указанного адреса (от _start_ID к более старым предложениям)
         // _user - адрес для которого смотрим награды
         // _start_ID - с какого предложения начинать вести поиск наград
         // _amount - количество просматриваемых предложений
+         _start_ID = ((_start_ID == 0) || (_start_ID > total_voting)) ? total_voting : _start_ID; // если запрашивается индекс = 0 или индекс превышающий последнее предложение, то возврат предложений делается от последнего предложения
         uint[] memory _proposalID = new uint[](_amount);
         bool[] memory _claim = new bool[](_amount);
 
         for(uint i; i < _amount; i++){
+            if(_start_ID == 0) break; // выход, если все предложения обработаны досрочно
             _proposalID[i] = _start_ID;
             _claim[i] = rewards[_start_ID][_user];
-            ++_start_ID;
+            --_start_ID;
         } 
         return (_proposalID, _claim);
     }
-
 }
         
