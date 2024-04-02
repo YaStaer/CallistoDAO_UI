@@ -108,7 +108,7 @@ export const parseComment = comment => {
   const arr = comment.split()
   for (const i = 0; i < arr.length; i++) {
     if (arr[i].search('://') != -1) {
-      arr[i] = '<a class="underline" target="_blank" href="' + arr[i] +'">' + arr[i] + '</a>'
+      arr[i] = '<a class="underline" target="_blank" href="' + arr[i] + '">' + arr[i] + '</a>'
     }
   }
   return 'Comment\u00A0-\u00A0' + arr.join('\u00A0')
@@ -120,27 +120,35 @@ export const getUserDAO = async wallet => {
 }
 
 export const getUsersList = async () => {
-  const resp = await GovernanceDAOcontract.methods.getUsersList(1, 100).call()
-  const id = 0
+  const userID = 1
+  const count = 10
   const users = {}
-  while (Number(resp[id][0])) {
-    users[resp[id][3]] = {
-      index: resp[id][0],
-      votes: resp[id][1],
-      entered: resp[id][2],
-      address: resp[id][3],
-      nickname: resp[id][4]
+  while (true) {
+    const resp = await GovernanceDAOcontract.methods.getUsersList(userID, count).call()
+    const id = 0
+    while (resp[id] && Number(resp[id][0])) {
+      users[resp[id][3]] = {
+        index: resp[id][0],
+        votes: resp[id][1],
+        entered: resp[id][2],
+        address: resp[id][3],
+        nickname: resp[id][4]
+      }
+      users[resp[id][4]] = {
+        index: resp[id][0],
+        votes: resp[id][1],
+        entered: resp[id][2],
+        address: resp[id][3],
+        nickname: resp[id][4]
+      }
+      id++
     }
-    users[resp[id][4]] = {
-      index: resp[id][0],
-      votes: resp[id][1],
-      entered: resp[id][2],
-      address: resp[id][3],
-      nickname: resp[id][4]
+    if (!Number(resp[resp.length - 1][0])) {
+      break
+    } else {
+      userID += count
     }
-    id++
   }
-  console.log(users)
   return users
 }
 
