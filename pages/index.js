@@ -6,7 +6,7 @@ import { BN } from 'bn.js'
 import { netSettings } from '../dapp.config'
 import { initOnboard } from '../utils/onboard'
 import { useConnectWallet, useSetChain, useWallets } from '@web3-onboard/react'
-import { getProposalsList, getTotalVoting, getUserDAO, getUsersList, humanDate, Web3 } from '../utils/interact'
+import { contractGovernanceDAO, getProposalsList, getTotalVoting, getUserDAO, getUsersList, humanDate, parseData, Web3 } from '../utils/interact'
 import Modal from '../utils/modal'
 
 export default function DAO() {
@@ -64,6 +64,7 @@ export default function DAO() {
       setTotalVoting(await getTotalVoting())
       setProposalsList(await getProposalsList(proposalID))
       setUsersList(await getUsersList())
+      // parseData()
     }
     init()
   }, [])
@@ -208,6 +209,11 @@ export default function DAO() {
                         : prop[9].slice(0, 8) + '...' + prop[9].slice(-6)}
                     </div>
                     <div>Status - {statuses[prop[5]]}</div>
+                    {/* TEST */}
+                    <div>Function - {parseData(prop[10], contractGovernanceDAO.abi)[0]}</div>
+                    <div>Parameters:</div>
+                    <div>{parseData(prop[10], contractGovernanceDAO.abi)[1]._name}</div>
+                    <div>{parseData(prop[10], contractGovernanceDAO.abi)[1]._user}</div>
                   </div>
                   <div className="col-start-3 text-base">
                     <div className="mt-3 flex place-items-center">

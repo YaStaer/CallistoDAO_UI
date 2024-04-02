@@ -5,7 +5,7 @@ import { BN } from 'bn.js'
 const Contract = require('web3-eth-contract')
 export const Web3 = require('web3')
 export const web3 = new Web3(netSettings.rpc)
-const contractGovernanceDAO = require('../artifacts/contracts/GovernanceDAO.sol/GovernanceDAO.json')
+export const contractGovernanceDAO = require('../artifacts/contracts/GovernanceDAO.sol/GovernanceDAO.json')
 const GovernanceDAOcontract = new web3.eth.Contract(contractGovernanceDAO.abi, netSettings.contracts.governanceDAO.contractAddress)
 
 const gas_percent = 120
@@ -69,6 +69,15 @@ export function humanDate(UNIX_timestamp) {
   return time
 }
 
+export const parseData = (data, abi) => {
+  for (const i = 0; i < abi.length; i ++) {
+    if (abi[i].type == 'function' && web3.eth.abi.encodeFunctionSignature(abi[i]) == data.slice(0, 10)) {
+      return [abi[i].name, web3.eth.abi.decodeParameters(abi[i].inputs, '0x' + data.slice(10))]
+    }
+  }
+  return ['Function not found', {}]
+}
+
 export const getUserDAO = async wallet => {
   const user = await GovernanceDAOcontract.methods.getUser(wallet.accounts[0].address).call()
   return user[0] != '0' ? user : ''
@@ -106,6 +115,7 @@ export const getTotalVoting = async () => {
 
 export const getProposalsList = async id => {
   const resp = await GovernanceDAOcontract.methods.getProposalsList(id, 5).call()
+  // const result = resp
   const proposals = []
   for (const i = 0; i < resp.length; i ++) {
     if (resp[i][0] != "0") {
