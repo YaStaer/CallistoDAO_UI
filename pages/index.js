@@ -85,6 +85,26 @@ export default function DAO() {
       setTotalVoting(votings)
       setProposalID(votings)
       setUsersList(await getUsersList())
+      // Временно!!!
+      console.log(
+        JSON.parse(
+          JSON.stringify([
+            { inputs: [], name: 'clear', outputs: [], stateMutability: 'nonpayable', type: 'function' },
+            { inputs: [], name: 'number', outputs: [{ internalType: 'uint256', name: '', type: 'uint256' }], stateMutability: 'view', type: 'function' },
+            {
+              inputs: [
+                { internalType: 'address', name: '_user', type: 'address' },
+                { internalType: 'uint256', name: '_num', type: 'uint256' }
+              ],
+              name: 'setUser',
+              outputs: [],
+              stateMutability: 'nonpayable',
+              type: 'function'
+            },
+            { inputs: [], name: 'user', outputs: [{ internalType: 'address', name: '', type: 'address' }], stateMutability: 'view', type: 'function' }
+          ])
+        )
+      )
     }
     init()
   }, [])
@@ -92,8 +112,10 @@ export default function DAO() {
   useEffect(() => {
     const init = async () => {
       if (wallet) {
+        const votings = await getTotalVoting()
+        setTotalVoting(votings)
         setUserDao(await getUserDAO(wallet))
-        setClaimsList(await getClaimList(wallet, proposalID, cards))
+        setClaimsList(await getClaimList(wallet, votings))
       } else {
         setClaimsList(null)
         setUserDao(null)
@@ -143,7 +165,7 @@ export default function DAO() {
           <div className="col-start-4 md:col-start-6 col-span-3 md:col-span-1">
             <div className="hidden md:block">
               <button
-                className="bg-gray-500/90 shadow-inner hover:shadow-gray-300/70 py-1 px-2 rounded-md text-base text-white tracking-wide"
+                className="bg-gray-500/90 shadow-inner hover:shadow-gray-300/70 py-1 px-2 rounded-md text-base text-white"
                 onClick={() => disconnect(wallet)}
               >
                 disconnect
@@ -216,8 +238,9 @@ export default function DAO() {
                 <div
                   key={'proposal_' + (index + 1)}
                   id={'proposal_' + (index + 1)}
-                  className="mx-2 p-2 mt-2 grid grid-cols-3 border-2 border-solid border-green-500 rounded-lg text-xs bg-gray-300/90"
+                  className=" relative mx-2 p-2 mt-2 grid grid-cols-3 border-2 border-solid border-green-500 rounded-lg text-xs bg-gray-300/90"
                 >
+                  <div className="absolute top-1 right-2 text-xl font-bold text-gray-500/70">{prop[0]}</div>
                   <div className="col-start-1 col-span-3 md:col-span-2">
                     <div>Start voting - {humanDate(prop[1])}</div>
                     <div>End voting - {humanDate(prop[3])}</div>
@@ -276,22 +299,25 @@ export default function DAO() {
                         ))}
                       </div>
                     )}
+                    <div className={`${prop[9] == netSettings.contracts.governanceDAO.contractAddress || prop[9] == netSettings.contracts.treasury.contractAddress ? 'hidden' : ''} mt-1`}>
+                      <input id="input_abi" placeholder="Paste ABI here" className="p-0.5 rounded-md border-2 border-gray-500/90"></input>
+                      <button id="add_abi" className="bg-gray-500/90 shadow-inner hover:shadow-gray-300/70 py-1 px-1 mx-2 rounded-md text-white">Add</button>
+                    </div>
                   </div>
                   <div className="col-start-1 col-span-3 md:col-start-3 md:col-span-1 place-self-center text-base mt-2">
                     <div className="mt-3 grid grid-cols-4 place-items-center">
                       <button
                         id="vote_up_button"
-                        disabled={
-                          wallet && userDao && !prop[7].concat(prop[8]).includes(userDao[3]) && Number(userDao[0]) < Number(prop[0]) && Number(prop[5]) == 1
-                            ? false
-                            : true
-                        }
+                        disabled={wallet && userDao && claimsList && !claimsList[prop[0]] && Number(prop[5]) == 1 ? false : true}
                         className={`col-start-1 col-span-1 mr-2 p-2 flex place-items-center border-2 border-green-600/90 fill-green-600/90 text-green-600/90 rounded-lg ${
-                          wallet && userDao && !prop[7].concat(prop[8]).includes(userDao[3]) && Number(userDao[0]) < Number(prop[0]) && Number(prop[5]) == 1
+                          wallet && userDao && claimsList && !claimsList[prop[0]] && Number(prop[5]) == 1
                             ? 'bg-gray-400/50 hover:fill-green-700/90 hover:text-green-700/90 hover:border-green-700/90 hover:bg-gray-400/20 transition-all'
                             : ''
                         } `}
                         onClick={() => vote(wallet, prop[0], 1)}
+                        data-tooltip-id="tooltip"
+                        data-tooltip-content={wallet && userDao && claimsList && !claimsList[prop[0]] && Number(prop[5]) == 1 ? 'Vote Up' : 'Votes Up'}
+                        data-tooltip-delay-show={500}
                       >
                         <svg xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 24 24" width="32" height="32">
                           <path d="M22.773,7.721A4.994,4.994,0,0,0,19,6H15.011l.336-2.041A3.037,3.037,0,0,0,9.626,2.122L7.712,6H5a5.006,5.006,0,0,0-5,5v5a5.006,5.006,0,0,0,5,5H18.3a5.024,5.024,0,0,0,4.951-4.3l.705-5A5,5,0,0,0,22.773,7.721ZM2,16V11A3,3,0,0,1,5,8H7V19H5A3,3,0,0,1,2,16Zm19.971-4.581-.706,5A3.012,3.012,0,0,1,18.3,19H9V7.734a1,1,0,0,0,.23-.292l2.189-4.435A1.07,1.07,0,0,1,13.141,2.8a1.024,1.024,0,0,1,.233.84l-.528,3.2A1,1,0,0,0,13.833,8H19a3,3,0,0,1,2.971,3.419Z" />
@@ -300,17 +326,16 @@ export default function DAO() {
                       </button>
                       <button
                         id="vote_down_button"
-                        disabled={
-                          wallet && userDao && !prop[7].concat(prop[8]).includes(userDao[3]) && Number(userDao[0]) < Number(prop[0]) && Number(prop[5]) == 1
-                            ? false
-                            : true
-                        }
+                        disabled={wallet && userDao && claimsList && !claimsList[prop[0]] && Number(prop[5]) == 1 ? false : true}
                         className={`col-start-2 col-span-1 mr-2 p-2 flex place-items-center border-2 border-red-600/90 fill-red-600/90 text-red-600/90 rounded-lg ${
-                          wallet && userDao && !prop[7].concat(prop[8]).includes(userDao[3]) && Number(userDao[0]) < Number(prop[0]) && Number(prop[5]) == 1
+                          wallet && userDao && claimsList && !claimsList[prop[0]] && Number(prop[5]) == 1
                             ? 'bg-gray-400/50 hover:border-red-700/90 hover:fill-red-700/90 hover:text-red-700/90 hover:bg-gray-400/20 transition-all'
                             : ''
                         }`}
                         onClick={() => vote(wallet, prop[0], 0)}
+                        data-tooltip-id="tooltip"
+                        data-tooltip-content={wallet && userDao && claimsList && !claimsList[prop[0]] && Number(prop[5]) == 1 ? 'Vote Down' : 'Votes Down'}
+                        data-tooltip-delay-show={500}
                       >
                         <svg xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 24 24" width="32" height="32">
                           <path d="M23.951,12.3l-.705-5A5.024,5.024,0,0,0,18.3,3H5A5.006,5.006,0,0,0,0,8v5a5.006,5.006,0,0,0,5,5H7.712l1.914,3.878a3.037,3.037,0,0,0,5.721-1.837L15.011,18H19a5,5,0,0,0,4.951-5.7ZM5,5H7V16H5a3,3,0,0,1-3-3V8A3,3,0,0,1,5,5Zm16.264,9.968A3,3,0,0,1,19,16H13.833a1,1,0,0,0-.987,1.162l.528,3.2a1.024,1.024,0,0,1-.233.84,1.07,1.07,0,0,1-1.722-.212L9.23,16.558A1,1,0,0,0,9,16.266V5h9.3a3.012,3.012,0,0,1,2.97,2.581l.706,5A3,3,0,0,1,21.264,14.968Z" />
@@ -397,7 +422,7 @@ export default function DAO() {
               className={`${
                 proposalsList && Number(proposalsList[0][0]) == totalVoting ? 'hidden' : ''
               } flex place-items-center bg-gray-500/90 shadow-inner hover:shadow-gray-300/70 h-8 px-2 mr-4 rounded-md text-base text-white`}
-              onClick={() => setProposalID(0)}
+              onClick={() => setProposalID(totalVoting)}
             >
               <div>First</div>
             </button>
@@ -424,7 +449,7 @@ export default function DAO() {
           </button>
         </div>
       </div>
-      <Tooltip id="tooltip" border="1px solid" style={{ zIndex: 99, borderRadius: 8 }} />
+      <Tooltip id="tooltip" border="1px solid" style={{ zIndex: 99, borderRadius: 8, backgroundColor: 'rgb(90, 90, 90)', color: 'rgb(230, 230, 230)' }} />
     </div>
   )
 }
