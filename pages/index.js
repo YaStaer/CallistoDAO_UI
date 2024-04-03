@@ -31,7 +31,7 @@ import Modal from '../utils/modal'
 export default function DAO() {
   const statuses = {
     1: 'Active',
-    2: 'All Vote',
+    2: 'Completed',
     3: 'Executed'
   }
   // кошельки, сети и подключения
@@ -176,19 +176,34 @@ export default function DAO() {
       </div>
       <div className="mt-2 mb-[75px] w-11/12 xl:w-[1200px] shadow-md bg-gray-100/70">
         <div className="p-3 grid grid-cols-2 place-items-center w-full">
-          <button className="flex place-items-center justify-self-start fill-gray-700/90 hover:fill-gray-900/90 text-gray-700/90 hover:text-gray-900/90 transition-all">
+          <button
+            className="flex place-items-center justify-self-start fill-gray-700/90 hover:fill-gray-900/90 text-gray-700/90 hover:text-gray-900/90 transition-all"
+            data-tooltip-id="tooltip"
+            data-tooltip-content="Create proposal"
+            data-tooltip-delay-show={500}
+          >
             <svg height="32" viewBox="0 0 24 24" width="32" xmlns="http://www.w3.org/2000/svg" className="m-2">
               <path d="m14.414 0h-9.414a3 3 0 0 0 -3 3v21h20v-16.414zm.586 3.414 3.586 3.586h-3.586zm-11 18.586v-19a1 1 0 0 1 1-1h8v7h7v13zm9-8h3v2h-3v3h-2v-3h-3v-2h3v-3h2z" />
             </svg>
             <div className="font-bold">New{'\u00A0'}proposal</div>
           </button>
           <div className="flex justify-self-end">
-            <button className="fill-gray-700/90 hover:fill-gray-900/90 transition-all">
+            <button
+              className="fill-gray-700/90 hover:fill-gray-900/90 transition-all"
+              data-tooltip-id="tooltip"
+              data-tooltip-content="Members DAO"
+              data-tooltip-delay-show={500}
+            >
               <svg height="32" viewBox="0 0 24 24" width="32" xmlns="http://www.w3.org/2000/svg" className="m-2">
                 <path d="m7.5 13a4.5 4.5 0 1 1 4.5-4.5 4.505 4.505 0 0 1 -4.5 4.5zm0-7a2.5 2.5 0 1 0 2.5 2.5 2.5 2.5 0 0 0 -2.5-2.5zm7.5 14a5.006 5.006 0 0 0 -5-5h-5a5.006 5.006 0 0 0 -5 5v4h2v-4a3 3 0 0 1 3-3h5a3 3 0 0 1 3 3v4h2zm2.5-11a4.5 4.5 0 1 1 4.5-4.5 4.505 4.505 0 0 1 -4.5 4.5zm0-7a2.5 2.5 0 1 0 2.5 2.5 2.5 2.5 0 0 0 -2.5-2.5zm6.5 14a5.006 5.006 0 0 0 -5-5h-4v2h4a3 3 0 0 1 3 3v4h2z" />
               </svg>
             </button>
-            <button className="fill-gray-700/90 hover:fill-gray-900/90 transition-all">
+            <button
+              className="fill-gray-700/90 hover:fill-gray-900/90 transition-all"
+              data-tooltip-id="tooltip"
+              data-tooltip-content="Settings"
+              data-tooltip-delay-show={500}
+            >
               <svg height="32" viewBox="0 0 24 24" width="32" xmlns="http://www.w3.org/2000/svg" className="m-2">
                 <path d="M21.3,13.88l-.45-.26c.1-.54,.15-1.09,.15-1.63s-.05-1.08-.15-1.63l.45-.26c1.43-.82,1.93-2.66,1.11-4.1-.4-.69-1.05-1.19-1.82-1.4-.77-.21-1.58-.1-2.28,.3l-.45,.26c-.84-.72-1.81-1.28-2.86-1.65v-.52c0-1.65-1.35-3-3-3s-3,1.35-3,3v.52c-1.05,.37-2.02,.93-2.86,1.65l-.45-.26c-.69-.4-1.5-.5-2.28-.3-.77,.21-1.42,.71-1.82,1.4-.82,1.43-.33,3.27,1.1,4.1l.45,.26c-.1,.54-.15,1.09-.15,1.63s.05,1.08,.15,1.63l-.45,.26c-1.43,.82-1.93,2.66-1.11,4.1,.4,.69,1.05,1.19,1.82,1.4,.77,.21,1.58,.1,2.28-.3l.45-.26c.84,.72,1.81,1.28,2.86,1.65v.52c0,1.65,1.35,3,3,3s3-1.35,3-3v-.52c1.05-.37,2.02-.93,2.86-1.65l.45,.26c.69,.4,1.5,.51,2.28,.3,.77-.21,1.42-.71,1.82-1.4,.82-1.43,.33-3.27-1.1-4.1Zm-2.56-3.74c.17,.62,.26,1.25,.26,1.86s-.09,1.23-.26,1.86c-.12,.44,.07,.9,.47,1.13l1.09,.63c.48,.28,.64,.89,.37,1.37-.13,.23-.35,.4-.61,.47-.26,.07-.53,.04-.76-.1l-1.09-.63c-.4-.23-.89-.16-1.21,.17-.89,.91-2.01,1.56-3.25,1.88-.44,.11-.75,.51-.75,.97v1.26c0,.55-.45,1-1,1s-1-.45-1-1v-1.26c0-.46-.31-.85-.75-.97-1.24-.32-2.36-.97-3.25-1.88-.19-.2-.45-.3-.72-.3-.17,0-.34,.04-.5,.13l-1.09,.63c-.23,.13-.5,.17-.76,.1-.26-.07-.47-.24-.61-.47-.27-.48-.11-1.09,.37-1.37l1.09-.63c.4-.23,.59-.69,.47-1.13-.17-.62-.26-1.25-.26-1.86s.09-1.23,.26-1.86c.12-.44-.07-.9-.47-1.13l-1.09-.63c-.48-.28-.64-.89-.37-1.37,.13-.23,.35-.4,.61-.47,.26-.07,.53-.03,.76,.1l1.09,.63c.4,.23,.89,.16,1.21-.17,.89-.91,2.01-1.56,3.25-1.88,.44-.11,.75-.51,.75-.97v-1.26c0-.55,.45-1,1-1s1,.45,1,1v1.26c0,.46,.31,.85,.75,.97,1.24,.32,2.36,.97,3.25,1.88,.32,.33,.82,.4,1.21,.17l1.09-.63c.23-.13,.5-.17,.76-.1,.26,.07,.47,.24,.61,.47,.27,.48,.11,1.09-.37,1.37l-1.09,.63c-.4,.23-.59,.69-.47,1.13Zm-4.96-1.94l-1.6,8c-.09,.48-.51,.8-.98,.8-.06,0-.13,0-.2-.02-.54-.11-.89-.63-.78-1.18l1.6-8c.11-.54,.63-.89,1.18-.78,.54,.11,.89,.63,.78,1.18Zm-4.57,2.65l-1.21,1.21,1.21,1.19c.39,.39,.39,1.02,0,1.41-.2,.2-.45,.29-.71,.29s-.51-.1-.71-.29l-1.21-1.21c-.78-.78-.78-2.04,0-2.81l1.21-1.21c.39-.39,1.02-.39,1.41,0s.39,1.02,0,1.41Zm8.21-.2c.78,.78,.78,2.04,0,2.81l-1.21,1.21c-.2,.2-.45,.29-.71,.29s-.51-.1-.71-.29c-.39-.39-.39-1.02,0-1.41l1.21-1.21-1.21-1.2c-.39-.39-.39-1.02,0-1.41s1.02-.39,1.41,0l1.21,1.21Z" />
               </svg>
@@ -308,6 +323,9 @@ export default function DAO() {
                           wallet && Number(prop[5]) == 1 && Number(prop[3]) < Math.round(Date.now() / 1000) ? 'flex' : 'hidden'
                         } place-items-center border-2 bg-gray-400/50 border-gray-700/90 fill-gray-700/90 rounded-lg hover:border-gray-900/90 hover:fill-gray-900/90 hover:bg-gray-400/20 transition-all`}
                         onClick={() => vote(wallet, prop[0], 0)}
+                        data-tooltip-id="tooltip"
+                        data-tooltip-content="Complete"
+                        data-tooltip-delay-show={500}
                       >
                         <svg xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 24 24" width="32" height="32">
                           <path d="m4.08,20h9.842c-.501-3.184-3.288-5.43-4.908-6.487-1.636,1.073-4.428,3.33-4.934,6.487Zm4.939-4.018c.669.536,1.382,1.217,1.943,2.018h-3.893c.579-.811,1.307-1.498,1.95-2.018Zm8.982-9.983c-3.309,0-6,2.691-6,6s2.691,6,6,6,6-2.691,6-6-2.691-6-6-6Zm0,10c-2.206,0-4-1.794-4-4s1.794-4,4-4,4,1.794,4,4-1.794,4-4,4Zm1-4.423l1.472,1.43-1.393,1.435-2.079-2.019v-3.423h2v2.577Zm-1.069,8.419c.032.331.069.659.069,1.004v3H0v-3c0-4.005,2.24-7.012,4.442-9C2.24,10.012,0,7.005,0,3,0,1.346,1.346,0,3,0h12.001c.801,0,1.554.312,2.12.878.566.566.879,1.32.879,2.122,0,.345-.037.673-.069,1.003-.704.006-1.383.108-2.032.285.064-.416.101-.844.101-1.288,0-.267-.104-.519-.293-.708-.188-.188-.439-.292-.706-.292H3c-.552,0-1,.449-1,1,0,3.773,2.508,6.55,4.612,8.216l.99.784-.991.784c-2.104,1.665-4.611,4.442-4.611,8.215v1h14s0-1,0-1c0-.444-.037-.873-.102-1.289.649.177,1.329.279,2.032.285Z" />
@@ -319,6 +337,9 @@ export default function DAO() {
                           wallet && Number(prop[5]) == 2 ? 'flex' : 'hidden'
                         } place-items-center border-2 bg-gray-400/50 border-gray-700/90 fill-gray-700/90 rounded-lg hover:border-gray-900/90 hover:fill-gray-900/90 hover:bg-gray-400/20 transition-all`}
                         onClick={() => execute(wallet, prop[0])}
+                        data-tooltip-id="tooltip"
+                        data-tooltip-content="Execute"
+                        data-tooltip-delay-show={500}
                       >
                         <svg xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 24 24" width="32" height="32">
                           <path d="m14.696,15.381l-.81.809c-.391.391-.391,1.023,0,1.414.195.195.451.293.707.293s.512-.098.707-.293l7.402-7.401c.391-.391.391-1.023,0-1.414-.391-.391-1.023-.391-1.414,0l-.722.722-7.082-7.082.722-.722c.391-.391.391-1.023,0-1.414s-1.023-.391-1.414,0l-7.402,7.402c-.391.391-.391,1.023,0,1.414.195.195.451.293.707.293s.512-.098.707-.293l.81-.81,2.836,2.836L.293,21.293c-.391.391-.391,1.023,0,1.414.195.195.451.293.707.293s.512-.098.707-.293l10.158-10.158,2.832,2.831Zm4.457-4.456l-3.043,3.042-1.245-1.245,3.043-3.043,1.245,1.245Zm-8.789-2.703l-1.336-1.336,3.043-3.043,1.336,1.336-3.043,3.043Zm4.457-1.629l1.672,1.672-3.043,3.043-1.672-1.672,3.043-3.043Zm9.179,16.407c0,.553-.447,1-1,1h-13c-.553,0-1-.447-1-1s.447-1,1-1h.051c.232-1.14,1.242-2,2.449-2h8c1.208,0,2.217.86,2.449,2h.051c.553,0,1,.447,1,1Z" />
@@ -329,16 +350,19 @@ export default function DAO() {
                         className={`col-start-4 col-span-1 ml-2 p-2 ${
                           wallet && claimsList && claimsList[prop[0]] && Number(prop[5]) > 1 ? 'flex' : 'hidden'
                         }  place-items-center border-2 bg-gray-400/50 border-gray-700/90 fill-gray-700/90 rounded-lg hover:border-gray-900/90 hover:fill-gray-900/90 hover:bg-gray-400/20 transition-all`}
-                        onClick={() => execute(wallet, prop[0])}
+                        onClick={() => claim(wallet, prop[0])}
+                        data-tooltip-id="tooltip"
+                        data-tooltip-content="Claim"
+                        data-tooltip-delay-show={500}
                       >
                         <svg xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 24 24" width="32" height="32">
                           <path d="M16.5,0c-4.206,0-7.5,1.977-7.5,4.5v2.587c-.483-.057-.985-.087-1.5-.087C3.294,7,0,8.977,0,11.5v8c0,2.523,3.294,4.5,7.5,4.5,3.407,0,6.216-1.297,7.16-3.131,.598,.087,1.214,.131,1.84,.131,4.206,0,7.5-1.977,7.5-4.5V4.5c0-2.523-3.294-4.5-7.5-4.5Zm5.5,12.5c0,1.18-2.352,2.5-5.5,2.5-.512,0-1.014-.035-1.5-.103v-1.984c.49,.057,.992,.087,1.5,.087,2.194,0,4.14-.538,5.5-1.411v.911ZM2,14.589c1.36,.873,3.306,1.411,5.5,1.411s4.14-.538,5.5-1.411v.911c0,1.18-2.352,2.5-5.5,2.5s-5.5-1.32-5.5-2.5v-.911Zm20-6.089c0,1.18-2.352,2.5-5.5,2.5-.535,0-1.06-.038-1.566-.112-.193-.887-.8-1.684-1.706-2.323,.984,.28,2.092,.435,3.272,.435,2.194,0,4.14-.538,5.5-1.411v.911Zm-5.5-6.5c3.148,0,5.5,1.32,5.5,2.5s-2.352,2.5-5.5,2.5-5.5-1.32-5.5-2.5,2.352-2.5,5.5-2.5ZM7.5,9c3.148,0,5.5,1.32,5.5,2.5s-2.352,2.5-5.5,2.5-5.5-1.32-5.5-2.5,2.352-2.5,5.5-2.5Zm0,13c-3.148,0-5.5-1.32-5.5-2.5v-.911c1.36,.873,3.306,1.411,5.5,1.411s4.14-.538,5.5-1.411v.911c0,1.18-2.352,2.5-5.5,2.5Zm9-3c-.512,0-1.014-.035-1.5-.103v-1.984c.49,.057,.992,.087,1.5,.087,2.194,0,4.14-.538,5.5-1.411v.911c0,1.18-2.352,2.5-5.5,2.5Z" />
                         </svg>
                       </button>
                     </div>
-                    <div className="ml-[4px] my-2 grid place-items-center">
+                    <div className="ml-[4px] flex place-items-center">
                       {prop[7].map((member, index) => (
-                        <div key={'member_up_' + index} className="ml-[-8px] flex">
+                        <div key={'member_up_' + index} className="ml-[-8px] mt-2 flex">
                           <img
                             src={`data:image/png;base64,${getAvatar(member)}`}
                             className="border-2 border-green-700 h-[28px] rounded-full"
@@ -348,8 +372,10 @@ export default function DAO() {
                           ></img>
                         </div>
                       ))}
+                    </div>
+                    <div className="ml-[4px] flex place-items-center">
                       {prop[8].map((member, index) => (
-                        <div key={'member_down_' + index} className="ml-[-8px] flex">
+                        <div key={'member_down_' + index} className="ml-[-8px] mt-2 flex">
                           <img
                             src={`data:image/png;base64,${getAvatar(member)}`}
                             className="border-2 border-red-700 h-[28px] rounded-full"
