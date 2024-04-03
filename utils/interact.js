@@ -100,7 +100,7 @@ export const parseSource = data => {
   for (const i = 0; i * 64 < data.slice(10).length; i++) {
     result['[' + i + ']'] = data.slice(10 + i * 64, 74 + i * 64)
   }
-  console.log(result)
+  // console.log(result)
   return result
 }
 
@@ -115,8 +115,8 @@ export const parseComment = comment => {
 }
 
 export const getUserDAO = async wallet => {
-  const user = await GovernanceDAOcontract.methods.getUser(wallet.accounts[0].address).call()
-  return user[0] != '0' ? user : ''
+  const user = await GovernanceDAOcontract.methods.getUser(await Web3.utils.toChecksumAddress(wallet['accounts'][0]['address'])).call()
+  return user[0] != '0' ? user : null
 }
 
 export const getUsersList = async () => {
@@ -125,9 +125,10 @@ export const getUsersList = async () => {
   const users = {}
   while (true) {
     const resp = await GovernanceDAOcontract.methods.getUsersList(userID, count).call()
+    // console.log(resp)
     const id = 0
     while (resp[id] && Number(resp[id][0])) {
-      users[resp[id][3]] = {
+      users[resp[id][3].toString()] = {
         index: resp[id][0],
         votes: resp[id][1],
         entered: resp[id][2],
@@ -149,6 +150,7 @@ export const getUsersList = async () => {
       userID += count
     }
   }
+  // console.log(users)
   return users
 }
 
@@ -168,19 +170,77 @@ export const getProposalsList = async id => {
   console.log(proposals)
   return proposals
 }
-export const getClaimList = async (address, id) => {
-  const resp = await GovernanceDAOcontract.methods.getClaimList(address, id, cards).call()
+export const getClaimList = async (wallet, id) => {
+  const resp = await GovernanceDAOcontract.methods.getClaimList(await Web3.utils.toChecksumAddress(wallet['accounts'][0]['address']), id, cards).call()
   const claims = {}
   for (const i = 0; i < resp[0].length; i++) {
     if (resp[0][i] != '0') {
       claims[resp[0][i]] = resp[1][i]
     }
   }
+  // console.log(claims)
   return claims
 }
 
 export const checkClaim = async (id, address) => {
   const check = await GovernanceDAOcontract.methods.checkClaim(id, address).call()
-  console.log(check)
+  // console.log(check)
   return check
+}
+
+export const vote = async (wallet, id, answer) => {
+  const address = wallet['accounts'][0]['address']
+  const tx = {
+    to: netSettings.contracts.governanceDAO.contractAddress,
+    from: address,
+    value: '0x0', // hex
+    data: GovernanceDAOcontract.methods.vote(id, answer).encodeABI()
+  }
+  const gas = await web3.eth.estimateGas(tx)
+  tx.gas = '0x' + new BN(gas).mul(new BN(gas_percent)).div(new BN(100)).toString(16)
+  console.log(tx)
+  const txHash = await wallet.provider.request({
+    method: 'eth_sendTransaction',
+    params: [tx]
+  })
+  console.log(`Send - ${txHash}`)
+  return tx
+}
+
+export const execute = async (wallet, id) => {
+  const address = wallet['accounts'][0]['address']
+  const tx = {
+    to: netSettings.contracts.governanceDAO.contractAddress,
+    from: address,
+    value: '0x0', // hex
+    data: GovernanceDAOcontract.methods.execute(id).encodeABI()
+  }
+  const gas = await web3.eth.estimateGas(tx)
+  tx.gas = '0x' + new BN(gas).mul(new BN(gas_percent)).div(new BN(100)).toString(16)
+  console.log(tx)
+  const txHash = await wallet.provider.request({
+    method: 'eth_sendTransaction',
+    params: [tx]
+  })
+  console.log(`Send - ${txHash}`)
+  return tx
+}
+
+export const claim = async (wallet, id) => {
+  const address = wallet['accounts'][0]['address']
+  const tx = {
+    to: netSettings.contracts.governanceDAO.contractAddress,
+    from: address,
+    value: '0x0', // hex
+    data: GovernanceDAOcontract.methods.claim(id).encodeABI()
+  }
+  const gas = await web3.eth.estimateGas(tx)
+  tx.gas = '0x' + new BN(gas).mul(new BN(gas_percent)).div(new BN(100)).toString(16)
+  console.log(tx)
+  const txHash = await wallet.provider.request({
+    method: 'eth_sendTransaction',
+    params: [tx]
+  })
+  console.log(`Send - ${txHash}`)
+  return tx
 }

@@ -9,8 +9,10 @@ import { useConnectWallet, useSetChain, useWallets } from '@web3-onboard/react'
 import {
   cards,
   checkClaim,
+  claim,
   contractGovernanceDAO,
   contractTreasury,
+  execute,
   getAvatar,
   getClaimList,
   getProposalsList,
@@ -21,6 +23,7 @@ import {
   parseComment,
   parseData,
   parseSource,
+  vote,
   Web3
 } from '../utils/interact'
 import Modal from '../utils/modal'
@@ -38,7 +41,7 @@ export default function DAO() {
 
   const [onboard, setOnboard] = useState(null)
 
-  const [userDao, setUserDao] = useState('')
+  const [userDao, setUserDao] = useState(null)
   const [usersList, setUsersList] = useState('')
   const [claimsList, setClaimsList] = useState(null)
   const [totalVoting, setTotalVoting] = useState(null)
@@ -81,7 +84,6 @@ export default function DAO() {
       const votings = await getTotalVoting()
       setTotalVoting(votings)
       setProposalID(votings)
-      setProposalsList(await getProposalsList(votings))
       setUsersList(await getUsersList())
     }
     init()
@@ -91,9 +93,10 @@ export default function DAO() {
     const init = async () => {
       if (wallet) {
         setUserDao(await getUserDAO(wallet))
-        setClaimsList(await getClaimList(wallet.accounts[0].address, proposalID, cards))
+        setClaimsList(await getClaimList(wallet, proposalID, cards))
       } else {
         setClaimsList(null)
+        setUserDao(null)
       }
     }
     init()
@@ -205,14 +208,14 @@ export default function DAO() {
                     <div>End voting - {humanDate(prop[3])}</div>
                     <div>Status - {statuses[prop[5]]}</div>
                     <div>Reward - {Web3.utils.fromWei(prop[2], 'ether')} CLO</div>
-                    <div className="hidden md:block cursor-pointer font-mono" onClick={() => navigator.clipboard.writeText(prop[4])}>
+                    <div className="hidden md:block cursor-copy font-mono" onClick={() => navigator.clipboard.writeText(prop[4])}>
                       Creator - {usersList[prop[4]] ? usersList[prop[4]].nickname : prop[4]}
                     </div>
-                    <div className="md:hidden cursor-pointer font-mono" onClick={() => navigator.clipboard.writeText(prop[4])}>
+                    <div className="md:hidden cursor-copy font-mono" onClick={() => navigator.clipboard.writeText(prop[4])}>
                       Creator - {usersList[prop[4]] ? usersList[prop[4]].nickname : prop[4].slice(0, 8) + '...' + prop[4].slice(-6)}
                     </div>
                     <div className="overflow-x-auto pb-2" dangerouslySetInnerHTML={{ __html: parseComment(prop[6]) }} />
-                    <div className="hidden md:block cursor-pointer font-mono" onClick={() => navigator.clipboard.writeText(prop[9])}>
+                    <div className="hidden md:block cursor-copy font-mono" onClick={() => navigator.clipboard.writeText(prop[9])}>
                       Contract -{' '}
                       {prop[9] == netSettings.contracts.treasury.contractAddress
                         ? 'Treasury'
@@ -220,7 +223,7 @@ export default function DAO() {
                         ? 'Governance DAO'
                         : prop[9]}
                     </div>
-                    <div className="md:hidden cursor-pointer font-mono" onClick={() => navigator.clipboard.writeText(prop[9])}>
+                    <div className="md:hidden cursor-copy font-mono" onClick={() => navigator.clipboard.writeText(prop[9])}>
                       Contract -{' '}
                       {prop[9] == netSettings.contracts.treasury.contractAddress
                         ? 'Treasury'
@@ -261,24 +264,73 @@ export default function DAO() {
                   </div>
                   <div className="col-start-1 col-span-3 md:col-start-3 md:col-span-1 place-self-center text-base mt-2">
                     <div className="mt-3 grid grid-cols-4 place-items-center">
-                      <button className="col-start-1 col-span-1 mr-2 p-2 flex place-items-center border-2 bg-gray-300/90 border-green-600/90 fill-green-600/90 text-green-600/90 rounded-lg hover:fill-green-500/90 hover:text-green-500/90 hover:border-green-500/90 hover:bg-gray-400/20 transition-all">
+                      <button
+                        id="vote_up_button"
+                        disabled={
+                          wallet && userDao && !prop[7].concat(prop[8]).includes(userDao[3]) && Number(userDao[0]) < Number(prop[0]) && Number(prop[5]) == 1
+                            ? false
+                            : true
+                        }
+                        className={`col-start-1 col-span-1 mr-2 p-2 flex place-items-center border-2 border-green-600/90 fill-green-600/90 text-green-600/90 rounded-lg ${
+                          wallet && userDao && !prop[7].concat(prop[8]).includes(userDao[3]) && Number(userDao[0]) < Number(prop[0]) && Number(prop[5]) == 1
+                            ? 'bg-gray-400/50 hover:fill-green-700/90 hover:text-green-700/90 hover:border-green-700/90 hover:bg-gray-400/20 transition-all'
+                            : ''
+                        } `}
+                        onClick={() => vote(wallet, prop[0], 1)}
+                      >
                         <svg xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 24 24" width="32" height="32">
                           <path d="M22.773,7.721A4.994,4.994,0,0,0,19,6H15.011l.336-2.041A3.037,3.037,0,0,0,9.626,2.122L7.712,6H5a5.006,5.006,0,0,0-5,5v5a5.006,5.006,0,0,0,5,5H18.3a5.024,5.024,0,0,0,4.951-4.3l.705-5A5,5,0,0,0,22.773,7.721ZM2,16V11A3,3,0,0,1,5,8H7V19H5A3,3,0,0,1,2,16Zm19.971-4.581-.706,5A3.012,3.012,0,0,1,18.3,19H9V7.734a1,1,0,0,0,.23-.292l2.189-4.435A1.07,1.07,0,0,1,13.141,2.8a1.024,1.024,0,0,1,.233.84l-.528,3.2A1,1,0,0,0,13.833,8H19a3,3,0,0,1,2.971,3.419Z" />
                         </svg>
                         <div className="pl-2 text-[24px] font-bold">{prop[7].length}</div>
                       </button>
-                      <button className="col-start-2 col-span-1 mr-2 p-2 flex place-items-center border-2 bg-gray-300/90 border-red-600/90 fill-red-600/90 text-red-600/90 rounded-lg hover:border-red-500/90 hover:fill-red-500/90 hover:text-red-500/90 hover:bg-gray-400/20 transition-all">
+                      <button
+                        id="vote_down_button"
+                        disabled={
+                          wallet && userDao && !prop[7].concat(prop[8]).includes(userDao[3]) && Number(userDao[0]) < Number(prop[0]) && Number(prop[5]) == 1
+                            ? false
+                            : true
+                        }
+                        className={`col-start-2 col-span-1 mr-2 p-2 flex place-items-center border-2 border-red-600/90 fill-red-600/90 text-red-600/90 rounded-lg ${
+                          wallet && userDao && !prop[7].concat(prop[8]).includes(userDao[3]) && Number(userDao[0]) < Number(prop[0]) && Number(prop[5]) == 1
+                            ? 'bg-gray-400/50 hover:border-red-700/90 hover:fill-red-700/90 hover:text-red-700/90 hover:bg-gray-400/20 transition-all'
+                            : ''
+                        }`}
+                        onClick={() => vote(wallet, prop[0], 0)}
+                      >
                         <svg xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 24 24" width="32" height="32">
                           <path d="M23.951,12.3l-.705-5A5.024,5.024,0,0,0,18.3,3H5A5.006,5.006,0,0,0,0,8v5a5.006,5.006,0,0,0,5,5H7.712l1.914,3.878a3.037,3.037,0,0,0,5.721-1.837L15.011,18H19a5,5,0,0,0,4.951-5.7ZM5,5H7V16H5a3,3,0,0,1-3-3V8A3,3,0,0,1,5,5Zm16.264,9.968A3,3,0,0,1,19,16H13.833a1,1,0,0,0-.987,1.162l.528,3.2a1.024,1.024,0,0,1-.233.84,1.07,1.07,0,0,1-1.722-.212L9.23,16.558A1,1,0,0,0,9,16.266V5h9.3a3.012,3.012,0,0,1,2.97,2.581l.706,5A3,3,0,0,1,21.264,14.968Z" />
                         </svg>
                         <div className="pl-2 text-[24px] font-bold">{prop[8].length}</div>
                       </button>
-                      <button className="col-start-3 col-span-1 ml-4 p-2 flex place-items-center border-2 bg-gray-300/90 border-gray-700/90 fill-gray-700/90 rounded-lg hover:border-gray-900/90 hover:fill-gray-900/90 hover:bg-gray-400/20 transition-all">
+                      <button
+                        id="completion_button"
+                        className={`col-start-3 col-span-1 ml-4 p-2 ${
+                          wallet && Number(prop[5]) == 1 && Number(prop[3]) < Math.round(Date.now() / 1000) ? 'flex' : 'hidden'
+                        } place-items-center border-2 bg-gray-400/50 border-gray-700/90 fill-gray-700/90 rounded-lg hover:border-gray-900/90 hover:fill-gray-900/90 hover:bg-gray-400/20 transition-all`}
+                        onClick={() => vote(wallet, prop[0], 0)}
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 24 24" width="32" height="32">
+                          <path d="m4.08,20h9.842c-.501-3.184-3.288-5.43-4.908-6.487-1.636,1.073-4.428,3.33-4.934,6.487Zm4.939-4.018c.669.536,1.382,1.217,1.943,2.018h-3.893c.579-.811,1.307-1.498,1.95-2.018Zm8.982-9.983c-3.309,0-6,2.691-6,6s2.691,6,6,6,6-2.691,6-6-2.691-6-6-6Zm0,10c-2.206,0-4-1.794-4-4s1.794-4,4-4,4,1.794,4,4-1.794,4-4,4Zm1-4.423l1.472,1.43-1.393,1.435-2.079-2.019v-3.423h2v2.577Zm-1.069,8.419c.032.331.069.659.069,1.004v3H0v-3c0-4.005,2.24-7.012,4.442-9C2.24,10.012,0,7.005,0,3,0,1.346,1.346,0,3,0h12.001c.801,0,1.554.312,2.12.878.566.566.879,1.32.879,2.122,0,.345-.037.673-.069,1.003-.704.006-1.383.108-2.032.285.064-.416.101-.844.101-1.288,0-.267-.104-.519-.293-.708-.188-.188-.439-.292-.706-.292H3c-.552,0-1,.449-1,1,0,3.773,2.508,6.55,4.612,8.216l.99.784-.991.784c-2.104,1.665-4.611,4.442-4.611,8.215v1h14s0-1,0-1c0-.444-.037-.873-.102-1.289.649.177,1.329.279,2.032.285Z" />
+                        </svg>
+                      </button>
+                      <button
+                        id="execute_button"
+                        className={`col-start-3 col-span-1 ml-4 p-2 ${
+                          wallet && Number(prop[5]) == 2 ? 'flex' : 'hidden'
+                        } place-items-center border-2 bg-gray-400/50 border-gray-700/90 fill-gray-700/90 rounded-lg hover:border-gray-900/90 hover:fill-gray-900/90 hover:bg-gray-400/20 transition-all`}
+                        onClick={() => execute(wallet, prop[0])}
+                      >
                         <svg xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 24 24" width="32" height="32">
                           <path d="m14.696,15.381l-.81.809c-.391.391-.391,1.023,0,1.414.195.195.451.293.707.293s.512-.098.707-.293l7.402-7.401c.391-.391.391-1.023,0-1.414-.391-.391-1.023-.391-1.414,0l-.722.722-7.082-7.082.722-.722c.391-.391.391-1.023,0-1.414s-1.023-.391-1.414,0l-7.402,7.402c-.391.391-.391,1.023,0,1.414.195.195.451.293.707.293s.512-.098.707-.293l.81-.81,2.836,2.836L.293,21.293c-.391.391-.391,1.023,0,1.414.195.195.451.293.707.293s.512-.098.707-.293l10.158-10.158,2.832,2.831Zm4.457-4.456l-3.043,3.042-1.245-1.245,3.043-3.043,1.245,1.245Zm-8.789-2.703l-1.336-1.336,3.043-3.043,1.336,1.336-3.043,3.043Zm4.457-1.629l1.672,1.672-3.043,3.043-1.672-1.672,3.043-3.043Zm9.179,16.407c0,.553-.447,1-1,1h-13c-.553,0-1-.447-1-1s.447-1,1-1h.051c.232-1.14,1.242-2,2.449-2h8c1.208,0,2.217.86,2.449,2h.051c.553,0,1,.447,1,1Z" />
                         </svg>
                       </button>
-                      <button className="col-start-4 col-span-1 ml-2 p-2 flex place-items-center border-2 bg-gray-300/90 border-gray-700/90 fill-gray-700/90 rounded-lg hover:border-gray-900/90 hover:fill-gray-900/90 hover:bg-gray-400/20 transition-all">
+                      <button
+                        id="claim_button"
+                        className={`col-start-4 col-span-1 ml-2 p-2 ${
+                          wallet && claimsList && claimsList[prop[0]] && Number(prop[5]) > 1 ? 'flex' : 'hidden'
+                        }  place-items-center border-2 bg-gray-400/50 border-gray-700/90 fill-gray-700/90 rounded-lg hover:border-gray-900/90 hover:fill-gray-900/90 hover:bg-gray-400/20 transition-all`}
+                        onClick={() => execute(wallet, prop[0])}
+                      >
                         <svg xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 24 24" width="32" height="32">
                           <path d="M16.5,0c-4.206,0-7.5,1.977-7.5,4.5v2.587c-.483-.057-.985-.087-1.5-.087C3.294,7,0,8.977,0,11.5v8c0,2.523,3.294,4.5,7.5,4.5,3.407,0,6.216-1.297,7.16-3.131,.598,.087,1.214,.131,1.84,.131,4.206,0,7.5-1.977,7.5-4.5V4.5c0-2.523-3.294-4.5-7.5-4.5Zm5.5,12.5c0,1.18-2.352,2.5-5.5,2.5-.512,0-1.014-.035-1.5-.103v-1.984c.49,.057,.992,.087,1.5,.087,2.194,0,4.14-.538,5.5-1.411v.911ZM2,14.589c1.36,.873,3.306,1.411,5.5,1.411s4.14-.538,5.5-1.411v.911c0,1.18-2.352,2.5-5.5,2.5s-5.5-1.32-5.5-2.5v-.911Zm20-6.089c0,1.18-2.352,2.5-5.5,2.5-.535,0-1.06-.038-1.566-.112-.193-.887-.8-1.684-1.706-2.323,.984,.28,2.092,.435,3.272,.435,2.194,0,4.14-.538,5.5-1.411v.911Zm-5.5-6.5c3.148,0,5.5,1.32,5.5,2.5s-2.352,2.5-5.5,2.5-5.5-1.32-5.5-2.5,2.352-2.5,5.5-2.5ZM7.5,9c3.148,0,5.5,1.32,5.5,2.5s-2.352,2.5-5.5,2.5-5.5-1.32-5.5-2.5,2.352-2.5,5.5-2.5Zm0,13c-3.148,0-5.5-1.32-5.5-2.5v-.911c1.36,.873,3.306,1.411,5.5,1.411s4.14-.538,5.5-1.411v.911c0,1.18-2.352,2.5-5.5,2.5Zm9-3c-.512,0-1.014-.035-1.5-.103v-1.984c.49,.057,.992,.087,1.5,.087,2.194,0,4.14-.538,5.5-1.411v.911c0,1.18-2.352,2.5-5.5,2.5Z" />
                         </svg>
