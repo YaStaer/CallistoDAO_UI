@@ -105,17 +105,22 @@ export const parseSource = data => {
 }
 
 export const parseComment = comment => {
+  // const comment = 'https://onboard.blocknative.com/docs/modules/core?'
   const temp = comment.split(' ')
   const arr = []
   for (const i = 0; i < temp.length; i++) {
     if (temp[i].search('://') != -1) {
-      arr[i] = '<a class="underline" target="_blank" href="' + temp[i] + '">' + temp[i] + '</a>'
+      const nodots = temp[i].replace(/[\.\,\!\?]$/, '')
+      arr[i] = '<a class="underline" target="_blank" href="' + nodots + '">' + nodots + '</a>'
+      if (nodots != temp[i]) {
+        arr[i] = arr[i] + temp[i][temp[i].length - 1]
+      }
     } else {
       arr[i] = temp[i]
     }
   }
   // console.log(temp)
-  // console.log(arr)
+  console.log(arr)
   return 'Comment\u00A0-\u00A0' + arr.join('\u00A0')
 }
 
