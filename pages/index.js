@@ -47,6 +47,7 @@ export default function DAO() {
   const [totalVoting, setTotalVoting] = useState(null)
   const [proposalsList, setProposalsList] = useState(null)
   const [proposalID, setProposalID] = useState(0)
+  const [knownContracts, setKnownContracts] = useState({})
 
   // эффекты onboard
   useEffect(() => {
@@ -85,26 +86,7 @@ export default function DAO() {
       setTotalVoting(votings)
       setProposalID(votings)
       setUsersList(await getUsersList())
-      // Временно!!!
-      console.log(
-        JSON.parse(
-          JSON.stringify([
-            { inputs: [], name: 'clear', outputs: [], stateMutability: 'nonpayable', type: 'function' },
-            { inputs: [], name: 'number', outputs: [{ internalType: 'uint256', name: '', type: 'uint256' }], stateMutability: 'view', type: 'function' },
-            {
-              inputs: [
-                { internalType: 'address', name: '_user', type: 'address' },
-                { internalType: 'uint256', name: '_num', type: 'uint256' }
-              ],
-              name: 'setUser',
-              outputs: [],
-              stateMutability: 'nonpayable',
-              type: 'function'
-            },
-            { inputs: [], name: 'user', outputs: [{ internalType: 'address', name: '', type: 'address' }], stateMutability: 'view', type: 'function' }
-          ])
-        )
-      )
+      setKnownContracts(JSON.parse(window.localStorage.getItem('knownContracts')))
     }
     init()
   }, [])
@@ -130,6 +112,20 @@ export default function DAO() {
     }
     getProps()
   }, [proposalID])
+
+  const handleSetABI = (data, abi, address) => {
+    const func = parseData(data, abi)
+    if (func.function) {
+      const contracts = JSON.parse(window.localStorage.getItem('knownContracts'))
+      if (!contracts) {
+        contracts = {}
+      }
+      contracts[address] = abi.replace(/\s/g, '')
+      window.localStorage.setItem('knownContracts', JSON.stringify(contracts))
+    }
+    setKnownContracts(JSON.parse(window.localStorage.getItem('knownContracts')))
+    console.log(knownContracts)
+  }
 
   return (
     <div className="min-h-screen h-full w-full overflow-hidden flex flex-col items-center justify-start bg-gradient-to-b from-gray-100 via-gray-300 to-gray-100 selection:bg-gray-700/90">
@@ -240,7 +236,7 @@ export default function DAO() {
                   id={'proposal_' + (index + 1)}
                   className=" relative mx-2 p-2 mt-2 grid grid-cols-3 border-2 border-solid border-green-500 rounded-lg text-xs bg-gray-300/90"
                 >
-                  <div className="absolute top-1 right-2 text-xl font-bold text-gray-500/70">{prop[0]}</div>
+                  <div className="absolute top-1 right-2 text-xl font-bold text-gray-500/70">#{prop[0]}</div>
                   <div className="col-start-1 col-span-3 md:col-span-2">
                     <div>Start voting - {humanDate(prop[1])}</div>
                     <div>End voting - {humanDate(prop[3])}</div>
@@ -289,6 +285,16 @@ export default function DAO() {
                           </div>
                         ))}
                       </div>
+                    ) : knownContracts && knownContracts[prop[9]] ? (
+                      <div className="overflow-x-auto">
+                        <div className="font-mono">Function: {parseData(prop[10], knownContracts[prop[9]]).function}</div>
+                        {Object.entries(parseData(prop[10], knownContracts[prop[9]]).params).map((par, index) => (
+                          <div key={'dparam_' + index} className="font-mono">
+                            {par[0]}:{'\u00A0'}
+                            {par[1]}
+                          </div>
+                        ))}
+                      </div>
                     ) : (
                       <div className="overflow-x-auto">
                         {Object.entries(parseSource(prop[10])).map((par, index) => (
@@ -299,9 +305,23 @@ export default function DAO() {
                         ))}
                       </div>
                     )}
-                    <div className={`${prop[9] == netSettings.contracts.governanceDAO.contractAddress || prop[9] == netSettings.contracts.treasury.contractAddress ? 'hidden' : ''} mt-1`}>
-                      <input id="input_abi" placeholder="Paste ABI here" className="p-0.5 rounded-md border-2 border-gray-500/90"></input>
-                      <button id="add_abi" className="bg-gray-500/90 shadow-inner hover:shadow-gray-300/70 py-1 px-1 mx-2 rounded-md text-white">Add</button>
+                    <div
+                      className={`${
+                        prop[9] == netSettings.contracts.governanceDAO.contractAddress || prop[9] == netSettings.contracts.treasury.contractAddress || (knownContracts && knownContracts[prop[9]])
+                          ? 'hidden'
+                          : ''
+                      } mt-1`}
+                    >
+                      <input
+                        id={'input_abi_' + prop[0]}
+                        type="text"
+                        placeholder="Paste ABI here"
+                        className="py-0.5 px-1 rounded-md border-2 border-gray-500/90"
+                      ></input>
+                      <button id="add_abi" className="bg-gray-500/90 shadow-inner hover:shadow-gray-300/70 py-1 px-1 mx-2 rounded-md text-white"
+                      onClick={() => handleSetABI(prop[10], document.getElementById('input_abi_' + prop[0]).value, prop[9])}>
+                        Add
+                      </button>
                     </div>
                   </div>
                   <div className="col-start-1 col-span-3 md:col-start-3 md:col-span-1 place-self-center text-base mt-2">

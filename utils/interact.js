@@ -80,16 +80,31 @@ export const getAvatar = address => {
 
 export const parseData = (data, abi) => {
   const result = {
-    function: 'Function not found',
-    params: {}
+    function: '',
+    params: {},
+    error: 'Function not found'
+  }
+  if (typeof abi == 'string') {
+    try {
+      abi = JSON.parse(abi.replace(/\s/g, ''))
+      console.log(abi)
+    } catch (err) {
+      return {
+        function: '',
+        params: {},
+        error: 'Incorrect ABI'
+      }
+    }
   }
   for (const i = 0; i < abi.length; i++) {
     if (abi[i].type == 'function' && web3.eth.abi.encodeFunctionSignature(abi[i]) == data.slice(0, 10)) {
       result.function = abi[i].name
+      // console.log(abi[i].name)
       const decode_params = web3.eth.abi.decodeParameters(abi[i].inputs, '0x' + data.slice(10))
       for (const p = 0; p < abi[i].inputs.length; p++) {
         result.params[abi[i].inputs[p].name] = decode_params[p]
       }
+      result.error = ''
     }
   }
   return result
@@ -105,7 +120,6 @@ export const parseSource = data => {
 }
 
 export const parseComment = comment => {
-  // const comment = 'https://onboard.blocknative.com/docs/modules/core?'
   const temp = comment.split(' ')
   const arr = []
   for (const i = 0; i < temp.length; i++) {
@@ -120,7 +134,7 @@ export const parseComment = comment => {
     }
   }
   // console.log(temp)
-  console.log(arr)
+  // console.log(arr)
   return 'Comment\u00A0-\u00A0' + arr.join('\u00A0')
 }
 
