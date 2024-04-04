@@ -87,7 +87,7 @@ export const parseData = (data, abi) => {
   if (typeof abi == 'string') {
     try {
       abi = JSON.parse(abi.replace(/\s/g, ''))
-      console.log(abi)
+      // console.log(abi)
     } catch (err) {
       return {
         function: '',

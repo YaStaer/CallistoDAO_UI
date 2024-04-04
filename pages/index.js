@@ -26,7 +26,7 @@ import {
   vote,
   Web3
 } from '../utils/interact'
-import Modal from '../utils/modal'
+import StatusModal from '../utils/statusModal'
 
 export default function DAO() {
   const statuses = {
@@ -48,6 +48,9 @@ export default function DAO() {
   const [proposalsList, setProposalsList] = useState(null)
   const [proposalID, setProposalID] = useState(0)
   const [knownContracts, setKnownContracts] = useState({})
+
+  const [status, setStatus] = useState('')
+  const [statusModalActive, setStatusModalActive] = useState(false)
 
   // эффекты onboard
   useEffect(() => {
@@ -113,6 +116,17 @@ export default function DAO() {
     getProps()
   }, [proposalID])
 
+  useEffect(() => {
+    const set_status = async () => {
+      if (status) {
+        setStatusModalActive(true)
+        setTimeout(() => setStatusModalActive(false), 2000)
+        setTimeout(() => setStatus(''), 2400)
+      } 
+    }
+    set_status()
+  }, [status])
+
   const handleSetABI = (data, abi, address) => {
     const func = parseData(data, abi)
     if (func.function) {
@@ -122,6 +136,9 @@ export default function DAO() {
       }
       contracts[address] = abi.replace(/\s/g, '')
       window.localStorage.setItem('knownContracts', JSON.stringify(contracts))
+      setStatus('ABI added')
+    } else {
+      setStatus(func.error)
     }
     setKnownContracts(JSON.parse(window.localStorage.getItem('knownContracts')))
     console.log(knownContracts)
@@ -236,20 +253,25 @@ export default function DAO() {
                   id={'proposal_' + (index + 1)}
                   className=" relative mx-2 p-2 mt-2 grid grid-cols-3 border-2 border-solid border-green-500 rounded-lg text-xs bg-gray-300/90"
                 >
-                  <div className="absolute top-1 right-2 text-xl font-bold text-gray-500/70">#{prop[0]}</div>
+                  <div className="absolute flex top-1 right-2 text-xl font-bold text-gray-600/70">
+                    <div className={`hidden ${Number(prop[5]) > 1 ? 'md:block' : ''} border-2 px-2 rounded-md ${prop[7].length > prop[8].length ? 'border-green-600/90 bg-green-600/10' : 'border-red-600/90 bg-red-600/10'}`}>{prop[7].length > prop[8].length ? 'Accepted' : 'Rejected'}</div>
+                    {'\u00A0'}{'\u00A0'}
+                    <div className={`py-0.5 px-2 md:hidden ${Number(prop[5]) > 1 ? prop[7].length > prop[8].length ? 'border-2 rounded-md border-green-600/90 bg-green-600/10' : 'border-2 rounded-md border-red-600/90 bg-red-600/10' : ''}`}>#{prop[0]}</div>
+                    <div className="hidden md:block py-0.5">#{prop[0]}</div>
+                  </div>
                   <div className="col-start-1 col-span-3 md:col-span-2">
                     <div>Start voting - {humanDate(prop[1])}</div>
                     <div>End voting - {humanDate(prop[3])}</div>
-                    <div>Status - {statuses[prop[5]]}</div>
+                    {/* <div>Status - {statuses[prop[5]]}</div> */}
                     <div>Reward - {Web3.utils.fromWei(prop[2], 'ether')} CLO</div>
-                    <div className="hidden md:block cursor-copy font-mono" onClick={() => navigator.clipboard.writeText(prop[4])}>
+                    <div className="hidden md:block cursor-copy font-mono" onClick={() => (navigator.clipboard.writeText(prop[4]), setStatus('Creator address copied'))}>
                       Creator - {usersList[prop[4]] ? usersList[prop[4]].nickname : prop[4]}
                     </div>
-                    <div className="md:hidden cursor-copy font-mono" onClick={() => navigator.clipboard.writeText(prop[4])}>
+                    <div className="md:hidden cursor-copy font-mono" onClick={() => (navigator.clipboard.writeText(prop[4]), setStatus('Creator address copied'))}>
                       Creator - {usersList[prop[4]] ? usersList[prop[4]].nickname : prop[4].slice(0, 8) + '...' + prop[4].slice(-6)}
                     </div>
                     <div className="overflow-x-auto pb-2" dangerouslySetInnerHTML={{ __html: parseComment(prop[6]) }} />
-                    <div className="hidden md:block cursor-copy font-mono" onClick={() => navigator.clipboard.writeText(prop[9])}>
+                    <div className="hidden md:block cursor-copy font-mono" onClick={() => (navigator.clipboard.writeText(prop[9]), setStatus('Contract address copied'))}>
                       Contract -{' '}
                       {prop[9] == netSettings.contracts.treasury.contractAddress
                         ? 'Treasury'
@@ -257,7 +279,7 @@ export default function DAO() {
                         ? 'Governance DAO'
                         : prop[9]}
                     </div>
-                    <div className="md:hidden cursor-copy font-mono" onClick={() => navigator.clipboard.writeText(prop[9])}>
+                    <div className="md:hidden cursor-copy font-mono" onClick={() => (navigator.clipboard.writeText(prop[9]), setStatus('Contract address copied'))}>
                       Contract -{' '}
                       {prop[9] == netSettings.contracts.treasury.contractAddress
                         ? 'Treasury'
@@ -307,7 +329,9 @@ export default function DAO() {
                     )}
                     <div
                       className={`${
-                        prop[9] == netSettings.contracts.governanceDAO.contractAddress || prop[9] == netSettings.contracts.treasury.contractAddress || (knownContracts && knownContracts[prop[9]])
+                        prop[9] == netSettings.contracts.governanceDAO.contractAddress ||
+                        prop[9] == netSettings.contracts.treasury.contractAddress ||
+                        (knownContracts && knownContracts[prop[9]])
                           ? 'hidden'
                           : ''
                       } mt-1`}
@@ -318,16 +342,19 @@ export default function DAO() {
                         placeholder="Paste ABI here"
                         className="py-0.5 px-1 rounded-md border-2 border-gray-500/90"
                       ></input>
-                      <button id="add_abi" className="bg-gray-500/90 shadow-inner hover:shadow-gray-300/70 py-1 px-1 mx-2 rounded-md text-white"
-                      onClick={() => handleSetABI(prop[10], document.getElementById('input_abi_' + prop[0]).value, prop[9])}>
+                      <button
+                        id={'add_abi_' + prop[0]}
+                        className="bg-gray-500/90 shadow-inner hover:shadow-gray-300/70 py-1 px-1 mx-2 rounded-md text-white"
+                        onClick={() => handleSetABI(prop[10], document.getElementById('input_abi_' + prop[0]).value, prop[9])}
+                      >
                         Add
                       </button>
                     </div>
                   </div>
                   <div className="col-start-1 col-span-3 md:col-start-3 md:col-span-1 place-self-center text-base mt-2">
-                    <div className="mt-3 grid grid-cols-4 place-items-center">
+                    <div className="mt-8 grid grid-cols-4 place-items-center">
                       <button
-                        id="vote_up_button"
+                        id={'vote_up_button_' + prop[0]}
                         disabled={wallet && userDao && claimsList && !claimsList[prop[0]] && Number(prop[5]) == 1 ? false : true}
                         className={`col-start-1 col-span-1 mr-2 p-2 flex place-items-center border-2 border-green-600/90 fill-green-600/90 text-green-600/90 rounded-lg ${
                           wallet && userDao && claimsList && !claimsList[prop[0]] && Number(prop[5]) == 1
@@ -345,7 +372,7 @@ export default function DAO() {
                         <div className="pl-2 text-[24px] font-bold">{prop[7].length}</div>
                       </button>
                       <button
-                        id="vote_down_button"
+                        id={'vote_down_button_' + prop[0]}
                         disabled={wallet && userDao && claimsList && !claimsList[prop[0]] && Number(prop[5]) == 1 ? false : true}
                         className={`col-start-2 col-span-1 mr-2 p-2 flex place-items-center border-2 border-red-600/90 fill-red-600/90 text-red-600/90 rounded-lg ${
                           wallet && userDao && claimsList && !claimsList[prop[0]] && Number(prop[5]) == 1
@@ -363,7 +390,7 @@ export default function DAO() {
                         <div className="pl-2 text-[24px] font-bold">{prop[8].length}</div>
                       </button>
                       <button
-                        id="completion_button"
+                        id={'completion_button_' + prop[0]}
                         className={`col-start-3 col-span-1 ml-4 p-2 ${
                           wallet && Number(prop[5]) == 1 && Number(prop[3]) < Math.round(Date.now() / 1000) ? 'flex' : 'hidden'
                         } place-items-center border-2 bg-gray-400/50 border-gray-700/90 fill-gray-700/90 rounded-lg hover:border-gray-900/90 hover:fill-gray-900/90 hover:bg-gray-400/20 transition-all`}
@@ -377,7 +404,7 @@ export default function DAO() {
                         </svg>
                       </button>
                       <button
-                        id="execute_button"
+                        id={'execute_button_' + prop[0]}
                         className={`col-start-3 col-span-1 ml-4 p-2 ${
                           wallet && Number(prop[5]) == 2 ? 'flex' : 'hidden'
                         } place-items-center border-2 bg-gray-400/50 border-gray-700/90 fill-gray-700/90 rounded-lg hover:border-gray-900/90 hover:fill-gray-900/90 hover:bg-gray-400/20 transition-all`}
@@ -391,7 +418,7 @@ export default function DAO() {
                         </svg>
                       </button>
                       <button
-                        id="claim_button"
+                        id={'claim_button_' + prop[0]}
                         className={`col-start-4 col-span-1 ml-2 p-2 ${
                           wallet && claimsList && claimsList[prop[0]] && Number(prop[5]) > 1 ? 'flex' : 'hidden'
                         }  place-items-center border-2 bg-gray-400/50 border-gray-700/90 fill-gray-700/90 rounded-lg hover:border-gray-900/90 hover:fill-gray-900/90 hover:bg-gray-400/20 transition-all`}
@@ -420,7 +447,7 @@ export default function DAO() {
                     </div>
                     <div className="ml-[4px] flex place-items-center">
                       {prop[8].map((member, index) => (
-                        <div key={'member_down_' + index} className="ml-[-8px] mt-2 flex">
+                        <div key={'member_down_' + index} className="ml-[-8px] mt-1 flex">
                           <img
                             src={`data:image/png;base64,${getAvatar(member)}`}
                             className="border-2 border-red-700 h-[28px] rounded-full"
@@ -469,6 +496,11 @@ export default function DAO() {
           </button>
         </div>
       </div>
+      <StatusModal active={statusModalActive} setActive={setStatusModalActive}>
+        <div className="text-center font-bold text-base md:text-xl text-gray-200 w-full">
+          {status}
+        </div>
+        </StatusModal>
       <Tooltip id="tooltip" border="1px solid" style={{ zIndex: 99, borderRadius: 8, backgroundColor: 'rgb(90, 90, 90)', color: 'rgb(230, 230, 230)' }} />
     </div>
   )
