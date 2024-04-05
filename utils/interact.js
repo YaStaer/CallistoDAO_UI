@@ -220,15 +220,58 @@ export const vote = async (wallet, id, answer) => {
     value: '0x0', // hex
     data: GovernanceDAOcontract.methods.vote(id, answer).encodeABI()
   }
-  const gas = await web3.eth.estimateGas(tx)
-  tx.gas = '0x' + new BN(gas).mul(new BN(gas_percent)).div(new BN(100)).toString(16)
-  console.log(tx)
-  const txHash = await wallet.provider.request({
-    method: 'eth_sendTransaction',
-    params: [tx]
-  })
-  console.log(`Send - ${txHash}`)
-  return tx
+  try {
+    const gas = await web3.eth.estimateGas(tx)
+    tx.gas = '0x' + new BN(gas).mul(new BN(gas_percent)).div(new BN(100)).toString(16)
+    console.log(tx)
+    const txHash = await wallet.provider.request({
+      method: 'eth_sendTransaction',
+      params: [tx]
+    })
+    console.log(`Send - ${txHash}`)
+    while (true) {
+      const receipt = await web3.eth.getTransactionReceipt(txHash)
+      if (receipt) {
+        await sleep(1000)
+        return `Vote ${answer ? 'Up' : 'Down'} successfull`
+      }
+      console.log('Waiting a mined block to include your tx... currently in block ' + (await web3.eth.getBlockNumber()))
+      await sleep(1000)
+    }
+  } catch (err) {
+    return err.toString()
+  }
+}
+
+export const complete = async (wallet, id) => {
+  const address = wallet['accounts'][0]['address']
+  const tx = {
+    to: netSettings.contracts.governanceDAO.contractAddress,
+    from: address,
+    value: '0x0', // hex
+    data: GovernanceDAOcontract.methods.vote(id, 0).encodeABI()
+  }
+  try {
+    const gas = await web3.eth.estimateGas(tx)
+    tx.gas = '0x' + new BN(gas).mul(new BN(gas_percent)).div(new BN(100)).toString(16)
+    console.log(tx)
+    const txHash = await wallet.provider.request({
+      method: 'eth_sendTransaction',
+      params: [tx]
+    })
+    console.log(`Send - ${txHash}`)
+    while (true) {
+      const receipt = await web3.eth.getTransactionReceipt(txHash)
+      if (receipt) {
+        await sleep(1000)
+        return `Voting completed`
+      }
+      console.log('Waiting a mined block to include your tx... currently in block ' + (await web3.eth.getBlockNumber()))
+      await sleep(1000)
+    }
+  } catch (err) {
+    return err.toString()
+  }
 }
 
 export const execute = async (wallet, id) => {
@@ -239,15 +282,27 @@ export const execute = async (wallet, id) => {
     value: '0x0', // hex
     data: GovernanceDAOcontract.methods.execute(id).encodeABI()
   }
-  const gas = await web3.eth.estimateGas(tx)
-  tx.gas = '0x' + new BN(gas).mul(new BN(gas_percent)).div(new BN(100)).toString(16)
-  console.log(tx)
-  const txHash = await wallet.provider.request({
-    method: 'eth_sendTransaction',
-    params: [tx]
-  })
-  console.log(`Send - ${txHash}`)
-  return tx
+  try {
+    const gas = await web3.eth.estimateGas(tx)
+    tx.gas = '0x' + new BN(gas).mul(new BN(gas_percent)).div(new BN(100)).toString(16)
+    console.log(tx)
+    const txHash = await wallet.provider.request({
+      method: 'eth_sendTransaction',
+      params: [tx]
+    })
+    console.log(`Send - ${txHash}`)
+    while (true) {
+      const receipt = await web3.eth.getTransactionReceipt(txHash)
+      if (receipt) {
+        await sleep(1000)
+        return `Execute successfull`
+      }
+      console.log('Waiting a mined block to include your tx... currently in block ' + (await web3.eth.getBlockNumber()))
+      await sleep(1000)
+    }
+  } catch (err) {
+    return err.toString()
+  }
 }
 
 export const claim = async (wallet, id) => {
@@ -258,13 +313,25 @@ export const claim = async (wallet, id) => {
     value: '0x0', // hex
     data: GovernanceDAOcontract.methods.claim(id).encodeABI()
   }
-  const gas = await web3.eth.estimateGas(tx)
-  tx.gas = '0x' + new BN(gas).mul(new BN(gas_percent)).div(new BN(100)).toString(16)
-  console.log(tx)
-  const txHash = await wallet.provider.request({
-    method: 'eth_sendTransaction',
-    params: [tx]
-  })
-  console.log(`Send - ${txHash}`)
-  return tx
+  try {
+    const gas = await web3.eth.estimateGas(tx)
+    tx.gas = '0x' + new BN(gas).mul(new BN(gas_percent)).div(new BN(100)).toString(16)
+    console.log(tx)
+    const txHash = await wallet.provider.request({
+      method: 'eth_sendTransaction',
+      params: [tx]
+    })
+    console.log(`Send - ${txHash}`)
+    while (true) {
+      const receipt = await web3.eth.getTransactionReceipt(txHash)
+      if (receipt) {
+        await sleep(1000)
+        return `Claim successfull`
+      }
+      console.log('Waiting a mined block to include your tx... currently in block ' + (await web3.eth.getBlockNumber()))
+      await sleep(1000)
+    }
+  } catch (err) {
+    return err.toString()
+  }
 }

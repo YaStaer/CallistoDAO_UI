@@ -10,6 +10,7 @@ import {
   cards,
   checkClaim,
   claim,
+  complete,
   contractGovernanceDAO,
   contractTreasury,
   execute,
@@ -122,6 +123,10 @@ export default function DAO() {
         setStatusModalActive(true)
         setTimeout(() => setStatusModalActive(false), 2000)
         setTimeout(() => setStatus(''), 2400)
+        setTimeout(async () => setProposalsList(await getProposalsList(proposalID)), 500)
+        if (wallet) {
+          setTimeout(async () => setClaimsList(await getClaimList(wallet, proposalID)), 500)
+        }
       }
     }
     set_status()
@@ -141,6 +146,26 @@ export default function DAO() {
       setStatus(func.error)
     }
     setKnownContracts(JSON.parse(window.localStorage.getItem('knownContracts')))
+  }
+
+  const handleRefresh = async () => {
+    setStatus('Refresh')
+  }
+
+  const handleVote = async (wallet, id, answer) => {
+    setStatus(await vote(wallet, id, answer))
+  }
+
+  const handleComplete = async (wallet, id) => {
+    setStatus(await complete(wallet, id))
+  }
+
+  const handleExecute = async (wallet, id) => {
+    setStatus(await execute(wallet, id))
+  }
+
+  const handleClaim = async (wallet, id) => {
+    setStatus(await claim(wallet, id))
   }
 
   return (
@@ -240,6 +265,18 @@ export default function DAO() {
             >
               <svg height="32" viewBox="0 0 24 24" width="32" xmlns="http://www.w3.org/2000/svg" className="m-2">
                 <path d="M21.3,13.88l-.45-.26c.1-.54,.15-1.09,.15-1.63s-.05-1.08-.15-1.63l.45-.26c1.43-.82,1.93-2.66,1.11-4.1-.4-.69-1.05-1.19-1.82-1.4-.77-.21-1.58-.1-2.28,.3l-.45,.26c-.84-.72-1.81-1.28-2.86-1.65v-.52c0-1.65-1.35-3-3-3s-3,1.35-3,3v.52c-1.05,.37-2.02,.93-2.86,1.65l-.45-.26c-.69-.4-1.5-.5-2.28-.3-.77,.21-1.42,.71-1.82,1.4-.82,1.43-.33,3.27,1.1,4.1l.45,.26c-.1,.54-.15,1.09-.15,1.63s.05,1.08,.15,1.63l-.45,.26c-1.43,.82-1.93,2.66-1.11,4.1,.4,.69,1.05,1.19,1.82,1.4,.77,.21,1.58,.1,2.28-.3l.45-.26c.84,.72,1.81,1.28,2.86,1.65v.52c0,1.65,1.35,3,3,3s3-1.35,3-3v-.52c1.05-.37,2.02-.93,2.86-1.65l.45,.26c.69,.4,1.5,.51,2.28,.3,.77-.21,1.42-.71,1.82-1.4,.82-1.43,.33-3.27-1.1-4.1Zm-2.56-3.74c.17,.62,.26,1.25,.26,1.86s-.09,1.23-.26,1.86c-.12,.44,.07,.9,.47,1.13l1.09,.63c.48,.28,.64,.89,.37,1.37-.13,.23-.35,.4-.61,.47-.26,.07-.53,.04-.76-.1l-1.09-.63c-.4-.23-.89-.16-1.21,.17-.89,.91-2.01,1.56-3.25,1.88-.44,.11-.75,.51-.75,.97v1.26c0,.55-.45,1-1,1s-1-.45-1-1v-1.26c0-.46-.31-.85-.75-.97-1.24-.32-2.36-.97-3.25-1.88-.19-.2-.45-.3-.72-.3-.17,0-.34,.04-.5,.13l-1.09,.63c-.23,.13-.5,.17-.76,.1-.26-.07-.47-.24-.61-.47-.27-.48-.11-1.09,.37-1.37l1.09-.63c.4-.23,.59-.69,.47-1.13-.17-.62-.26-1.25-.26-1.86s.09-1.23,.26-1.86c.12-.44-.07-.9-.47-1.13l-1.09-.63c-.48-.28-.64-.89-.37-1.37,.13-.23,.35-.4,.61-.47,.26-.07,.53-.03,.76,.1l1.09,.63c.4,.23,.89,.16,1.21-.17,.89-.91,2.01-1.56,3.25-1.88,.44-.11,.75-.51,.75-.97v-1.26c0-.55,.45-1,1-1s1,.45,1,1v1.26c0,.46,.31,.85,.75,.97,1.24,.32,2.36,.97,3.25,1.88,.32,.33,.82,.4,1.21,.17l1.09-.63c.23-.13,.5-.17,.76-.1,.26,.07,.47,.24,.61,.47,.27,.48,.11,1.09-.37,1.37l-1.09,.63c-.4,.23-.59,.69-.47,1.13Zm-4.96-1.94l-1.6,8c-.09,.48-.51,.8-.98,.8-.06,0-.13,0-.2-.02-.54-.11-.89-.63-.78-1.18l1.6-8c.11-.54,.63-.89,1.18-.78,.54,.11,.89,.63,.78,1.18Zm-4.57,2.65l-1.21,1.21,1.21,1.19c.39,.39,.39,1.02,0,1.41-.2,.2-.45,.29-.71,.29s-.51-.1-.71-.29l-1.21-1.21c-.78-.78-.78-2.04,0-2.81l1.21-1.21c.39-.39,1.02-.39,1.41,0s.39,1.02,0,1.41Zm8.21-.2c.78,.78,.78,2.04,0,2.81l-1.21,1.21c-.2,.2-.45,.29-.71,.29s-.51-.1-.71-.29c-.39-.39-.39-1.02,0-1.41l1.21-1.21-1.21-1.2c-.39-.39-.39-1.02,0-1.41s1.02-.39,1.41,0l1.21,1.21Z" />
+              </svg>
+            </button>
+            <button
+              className="fill-gray-700/90 hover:fill-gray-900/90 transition-all"
+              onClick={() => handleRefresh()}
+              data-tooltip-id="tooltip"
+              data-tooltip-content="Refresh page"
+              data-tooltip-delay-show={500}
+            >
+              <svg height="32" viewBox="0 0 24 24" width="32" xmlns="http://www.w3.org/2000/svg" className="m-2">
+                <path d="M12,2a10.032,10.032,0,0,1,7.122,3H16a1,1,0,0,0-1,1h0a1,1,0,0,0,1,1h4.143A1.858,1.858,0,0,0,22,5.143V1a1,1,0,0,0-1-1h0a1,1,0,0,0-1,1V3.078A11.981,11.981,0,0,0,.05,10.9a1.007,1.007,0,0,0,1,1.1h0a.982.982,0,0,0,.989-.878A10.014,10.014,0,0,1,12,2Z" />
+                <path d="M22.951,12a.982.982,0,0,0-.989.878A9.986,9.986,0,0,1,4.878,19H8a1,1,0,0,0,1-1H9a1,1,0,0,0-1-1H3.857A1.856,1.856,0,0,0,2,18.857V23a1,1,0,0,0,1,1H3a1,1,0,0,0,1-1V20.922A11.981,11.981,0,0,0,23.95,13.1a1.007,1.007,0,0,0-1-1.1Z" />
               </svg>
             </button>
           </div>
@@ -405,7 +442,7 @@ export default function DAO() {
                             ? 'bg-gray-400/50 hover:fill-green-700/90 hover:text-green-700/90 hover:border-green-700/90 hover:bg-gray-400/20 transition-all'
                             : ''
                         } `}
-                        onClick={() => vote(wallet, prop[0], 1)}
+                        onClick={() => handleVote(wallet, prop[0], 1)}
                         data-tooltip-id="tooltip"
                         data-tooltip-content={wallet && userDao && claimsList && !claimsList[prop[0]] && Number(prop[5]) == 1 ? 'Vote Up' : 'Votes Up'}
                         data-tooltip-delay-show={500}
@@ -423,7 +460,7 @@ export default function DAO() {
                             ? 'bg-gray-400/50 hover:border-red-700/90 hover:fill-red-700/90 hover:text-red-700/90 hover:bg-gray-400/20 transition-all'
                             : ''
                         }`}
-                        onClick={() => vote(wallet, prop[0], 0)}
+                        onClick={() => handleVote(wallet, prop[0], 0)}
                         data-tooltip-id="tooltip"
                         data-tooltip-content={wallet && userDao && claimsList && !claimsList[prop[0]] && Number(prop[5]) == 1 ? 'Vote Down' : 'Votes Down'}
                         data-tooltip-delay-show={500}
@@ -438,7 +475,7 @@ export default function DAO() {
                         className={`col-start-3 col-span-1 ml-4 p-2 ${
                           wallet && Number(prop[5]) == 1 && Number(prop[3]) < Math.round(Date.now() / 1000) ? 'flex' : 'hidden'
                         } place-items-center border-2 bg-gray-400/50 border-gray-700/90 fill-gray-700/90 rounded-lg hover:border-gray-900/90 hover:fill-gray-900/90 hover:bg-gray-400/20 transition-all`}
-                        onClick={() => vote(wallet, prop[0], 0)}
+                        onClick={() => handleComplete(wallet, prop[0])}
                         data-tooltip-id="tooltip"
                         data-tooltip-content="Complete"
                         data-tooltip-delay-show={500}
@@ -452,7 +489,7 @@ export default function DAO() {
                         className={`col-start-3 col-span-1 ml-4 p-2 ${
                           wallet && Number(prop[5]) == 2 ? 'flex' : 'hidden'
                         } place-items-center border-2 bg-gray-400/50 border-gray-700/90 fill-gray-700/90 rounded-lg hover:border-gray-900/90 hover:fill-gray-900/90 hover:bg-gray-400/20 transition-all`}
-                        onClick={() => execute(wallet, prop[0])}
+                        onClick={() => handleExecute(wallet, prop[0])}
                         data-tooltip-id="tooltip"
                         data-tooltip-content="Execute"
                         data-tooltip-delay-show={500}
@@ -466,7 +503,7 @@ export default function DAO() {
                         className={`col-start-4 col-span-1 ml-2 p-2 ${
                           wallet && claimsList && claimsList[prop[0]] && Number(prop[5]) > 1 ? 'flex' : 'hidden'
                         }  place-items-center border-2 bg-gray-400/50 border-gray-700/90 fill-gray-700/90 rounded-lg hover:border-gray-900/90 hover:fill-gray-900/90 hover:bg-gray-400/20 transition-all`}
-                        onClick={() => claim(wallet, prop[0])}
+                        onClick={() => handleClaim(wallet, prop[0])}
                         data-tooltip-id="tooltip"
                         data-tooltip-content="Claim"
                         data-tooltip-delay-show={500}
