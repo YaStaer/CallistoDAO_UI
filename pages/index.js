@@ -122,7 +122,7 @@ export default function DAO() {
         setStatusModalActive(true)
         setTimeout(() => setStatusModalActive(false), 2000)
         setTimeout(() => setStatus(''), 2400)
-      } 
+      }
     }
     set_status()
   }, [status])
@@ -141,7 +141,6 @@ export default function DAO() {
       setStatus(func.error)
     }
     setKnownContracts(JSON.parse(window.localStorage.getItem('knownContracts')))
-    console.log(knownContracts)
   }
 
   return (
@@ -254,9 +253,26 @@ export default function DAO() {
                   className=" relative mx-2 p-2 mt-2 grid grid-cols-3 border-2 border-solid border-green-500 rounded-lg text-xs bg-gray-300/90"
                 >
                   <div className="absolute flex top-1 right-2 text-xl font-bold text-gray-600/70">
-                    <div className={`hidden ${Number(prop[5]) > 1 ? 'md:block' : ''} border-2 px-2 rounded-md ${prop[7].length > prop[8].length ? 'border-green-600/90 bg-green-600/10' : 'border-red-600/90 bg-red-600/10'}`}>{prop[7].length > prop[8].length ? 'Accepted' : 'Rejected'}</div>
-                    {'\u00A0'}{'\u00A0'}
-                    <div className={`py-0.5 px-2 md:hidden ${Number(prop[5]) > 1 ? prop[7].length > prop[8].length ? 'border-2 rounded-md border-green-600/90 bg-green-600/10' : 'border-2 rounded-md border-red-600/90 bg-red-600/10' : ''}`}>#{prop[0]}</div>
+                    <div
+                      className={`hidden ${Number(prop[5]) > 1 ? 'md:block' : ''} border-2 px-2 rounded-md ${
+                        prop[7].length > prop[8].length ? 'border-green-600/90 bg-green-600/10' : 'border-red-600/90 bg-red-600/10'
+                      }`}
+                    >
+                      {prop[7].length > prop[8].length ? 'Accepted' : 'Rejected'}
+                    </div>
+                    {'\u00A0'}
+                    {'\u00A0'}
+                    <div
+                      className={`py-0.5 px-2 md:hidden ${
+                        Number(prop[5]) > 1
+                          ? prop[7].length > prop[8].length
+                            ? 'border-2 rounded-md border-green-600/90 bg-green-600/10'
+                            : 'border-2 rounded-md border-red-600/90 bg-red-600/10'
+                          : ''
+                      }`}
+                    >
+                      #{prop[0]}
+                    </div>
                     <div className="hidden md:block py-0.5">#{prop[0]}</div>
                   </div>
                   <div className="col-start-1 col-span-3 md:col-span-2">
@@ -264,28 +280,56 @@ export default function DAO() {
                     <div>End voting - {humanDate(prop[3])}</div>
                     {/* <div>Status - {statuses[prop[5]]}</div> */}
                     <div>Reward - {Web3.utils.fromWei(prop[2], 'ether')} CLO</div>
-                    <div className="hidden md:block cursor-copy font-mono" onClick={() => (navigator.clipboard.writeText(prop[4]), setStatus('Creator address copied'))}>
-                      Creator - {usersList[prop[4]] ? usersList[prop[4]].nickname : prop[4]}
+                    <div className="hidden md:flex" onClick={() => (navigator.clipboard.writeText(prop[4]), setStatus('Creator address copied'))}>
+                      <div>
+                        Creator{'\u00A0'}-{'\u00A0'}
+                      </div>
+                      <div className={`cursor-copy ${usersList[prop[4]] ? '' : 'font-mono'}`}>{usersList[prop[4]] ? usersList[prop[4]].nickname : prop[4]}</div>
                     </div>
-                    <div className="md:hidden cursor-copy font-mono" onClick={() => (navigator.clipboard.writeText(prop[4]), setStatus('Creator address copied'))}>
-                      Creator - {usersList[prop[4]] ? usersList[prop[4]].nickname : prop[4].slice(0, 8) + '...' + prop[4].slice(-6)}
+                    <div className="md:hidden flex" onClick={() => (navigator.clipboard.writeText(prop[4]), setStatus('Creator address copied'))}>
+                      <div>
+                        Creator{'\u00A0'}-{'\u00A0'}
+                      </div>
+                      <div className={`cursor-copy ${usersList[prop[4]] ? '' : 'font-mono'}`}>
+                        {usersList[prop[4]] ? usersList[prop[4]].nickname : prop[4].slice(0, 8) + '...' + prop[4].slice(-6)}
+                      </div>
                     </div>
                     <div className="overflow-x-auto pb-2" dangerouslySetInnerHTML={{ __html: parseComment(prop[6]) }} />
-                    <div className="hidden md:block cursor-copy font-mono" onClick={() => (navigator.clipboard.writeText(prop[9]), setStatus('Contract address copied'))}>
-                      Contract -{' '}
-                      {prop[9] == netSettings.contracts.treasury.contractAddress
-                        ? 'Treasury'
-                        : prop[9] == netSettings.contracts.governanceDAO.contractAddress
-                        ? 'Governance DAO'
-                        : prop[9]}
+                    <div className="hidden md:flex" onClick={() => (navigator.clipboard.writeText(prop[9]), setStatus('Contract address copied'))}>
+                      <div>
+                        Contract{'\u00A0'}-{'\u00A0'}
+                      </div>
+                      <div
+                        className={`cursor-copy ${
+                          prop[9] == netSettings.contracts.treasury.contractAddress || prop[9] == netSettings.contracts.governanceDAO.contractAddress
+                            ? ''
+                            : 'font-mono'
+                        }`}
+                      >
+                        {prop[9] == netSettings.contracts.treasury.contractAddress
+                          ? 'Treasury'
+                          : prop[9] == netSettings.contracts.governanceDAO.contractAddress
+                          ? 'Governance DAO'
+                          : prop[9]}
+                      </div>
                     </div>
-                    <div className="md:hidden cursor-copy font-mono" onClick={() => (navigator.clipboard.writeText(prop[9]), setStatus('Contract address copied'))}>
-                      Contract -{' '}
-                      {prop[9] == netSettings.contracts.treasury.contractAddress
-                        ? 'Treasury'
-                        : prop[9] == netSettings.contracts.governanceDAO.contractAddress
-                        ? 'Governance DAO'
-                        : prop[9].slice(0, 8) + '...' + prop[9].slice(-6)}
+                    <div className="md:hidden flex" onClick={() => (navigator.clipboard.writeText(prop[9]), setStatus('Contract address copied'))}>
+                      <div>
+                        Contract{'\u00A0'}-{'\u00A0'}
+                      </div>
+                      <div
+                        className={`cursor-copy ${
+                          prop[9] == netSettings.contracts.treasury.contractAddress || prop[9] == netSettings.contracts.governanceDAO.contractAddress
+                            ? ''
+                            : 'font-mono'
+                        }`}
+                      >
+                        {prop[9] == netSettings.contracts.treasury.contractAddress
+                          ? 'Treasury'
+                          : prop[9] == netSettings.contracts.governanceDAO.contractAddress
+                          ? 'Governance DAO'
+                          : prop[9].slice(0, 8) + '...' + prop[9].slice(-6)}
+                      </div>
                     </div>
                     {prop[9] == netSettings.contracts.treasury.contractAddress ? (
                       <div className="overflow-x-auto">
@@ -497,10 +541,8 @@ export default function DAO() {
         </div>
       </div>
       <StatusModal active={statusModalActive} setActive={setStatusModalActive}>
-        <div className="text-center font-bold text-base md:text-xl text-gray-200 w-full">
-          {status}
-        </div>
-        </StatusModal>
+        <div className="text-center font-bold text-base md:text-xl text-gray-200 w-full">{status}</div>
+      </StatusModal>
       <Tooltip id="tooltip" border="1px solid" style={{ zIndex: 99, borderRadius: 8, backgroundColor: 'rgb(90, 90, 90)', color: 'rgb(230, 230, 230)' }} />
     </div>
   )
