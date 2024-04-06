@@ -113,6 +113,9 @@ export default function DAO() {
   useEffect(() => {
     const getProps = async () => {
       setProposalsList(await getProposalsList(proposalID))
+      if (wallet) {
+        setClaimsList(await getClaimList(wallet, proposalID))
+      }
     }
     getProps()
   }, [proposalID])
