@@ -18,6 +18,8 @@ import {
   getClaimList,
   getProposalsList,
   getTotalVoting,
+  getTreasuryBalanceDAO,
+  getTreasuryTokenBalanceDAO,
   getUserDAO,
   getUsersList,
   humanDate,
@@ -35,6 +37,7 @@ export default function DAO() {
     2: 'Completed',
     3: 'Executed'
   }
+
   // кошельки, сети и подключения
   const [{ wallet, connecting }, connect, disconnect] = useConnectWallet()
   // const [{ chains, connectedChain, settingChain }, setChain] = useSetChain()
@@ -48,10 +51,13 @@ export default function DAO() {
   const [totalVoting, setTotalVoting] = useState(null)
   const [proposalsList, setProposalsList] = useState(null)
   const [proposalID, setProposalID] = useState(0)
+  const [balanceDAO, setBalanceDAO] = useState([])
+  const [balanceTokenDAO, setBalanceTokenDAO] = useState({})
   const [knownContracts, setKnownContracts] = useState({})
 
   const [status, setStatus] = useState('')
   const [statusModalActive, setStatusModalActive] = useState(false)
+  const [statusUniversalBlock, setStatusUniversalBlock] = useState('none')
 
   // эффекты onboard
   useEffect(() => {
@@ -91,6 +97,7 @@ export default function DAO() {
       setProposalID(votings)
       setUsersList(await getUsersList())
       setKnownContracts(JSON.parse(window.localStorage.getItem('knownContracts')))
+      setBalanceDAO(await getTreasuryBalanceDAO())
     }
     init()
   }, [])
@@ -126,9 +133,27 @@ export default function DAO() {
         setStatusModalActive(true)
         setTimeout(() => setStatusModalActive(false), 2000)
         setTimeout(() => setStatus(''), 2400)
-        setTimeout(async () => setProposalsList(await getProposalsList(proposalID)), 500)
-        if (wallet) {
-          setTimeout(async () => setClaimsList(await getClaimList(wallet, proposalID)), 500)
+
+        setBalanceDAO(await getTreasuryBalanceDAO())
+
+        if (totalVoting == proposalID) {
+          // Если на первой странице
+          const votings = await getTotalVoting()
+          if (votings != totalVoting) {
+            // Если были добавлены пропосалы
+            setTimeout(async () => setTotalVoting(votings), 500)
+            setTimeout(async () => setProposalID(votings), 500)
+          } else {
+            setTimeout(async () => setProposalsList(await getProposalsList(proposalID)), 500)
+            if (wallet) {
+              setTimeout(async () => setClaimsList(await getClaimList(wallet, proposalID)), 500)
+            }
+          }
+        } else {
+          setTimeout(async () => setProposalsList(await getProposalsList(proposalID)), 500)
+          if (wallet) {
+            setTimeout(async () => setClaimsList(await getClaimList(wallet, proposalID)), 500)
+          }
         }
       }
     }
@@ -151,7 +176,18 @@ export default function DAO() {
     setKnownContracts(JSON.parse(window.localStorage.getItem('knownContracts')))
   }
 
-  const handleRefresh = async () => {
+  const handleSetTokenAddress = async addr => {
+    const balance = await getTreasuryTokenBalanceDAO(addr)
+    if (balance.error) {
+      setStatus(balance.error)
+      document.getElementById('input_token_addr').value = ''
+    } else {
+      setBalanceTokenDAO(balance)
+      document.getElementById('input_token_addr').value = ''
+    }
+  }
+
+  const handleRefresh = () => {
     setStatus('Refresh')
   }
 
@@ -237,21 +273,64 @@ export default function DAO() {
         )}
       </div>
       <div className="mt-2 mb-[75px] w-11/12 xl:w-[1200px] shadow-md bg-gray-100/70">
-        <div className="p-3 grid grid-cols-2 place-items-center w-full">
-          <button
-            className="flex place-items-center justify-self-start fill-gray-700/90 hover:fill-gray-900/90 text-gray-700/90 hover:text-gray-900/90 transition-all"
-            data-tooltip-id="tooltip"
-            data-tooltip-content="Create proposal"
-            data-tooltip-delay-show={500}
-          >
-            <svg height="32" viewBox="0 0 24 24" width="32" xmlns="http://www.w3.org/2000/svg" className="m-2">
-              <path d="m14.414 0h-9.414a3 3 0 0 0 -3 3v21h20v-16.414zm.586 3.414 3.586 3.586h-3.586zm-11 18.586v-19a1 1 0 0 1 1-1h8v7h7v13zm9-8h3v2h-3v3h-2v-3h-3v-2h3v-3h2z" />
-            </svg>
-            <div className="font-bold">New{'\u00A0'}proposal</div>
-          </button>
-          <div className="flex justify-self-end">
+        <div className="px-3 py-1 grid grid-cols-2 md:grid-cols-4 place-items-center w-full">
+          <div className="col-start-1 flex place-items-center justify-self-start">
+            <button
+              className="col-start-1 flex place-items-center justify-self-start fill-gray-700/90 hover:fill-gray-900/90 text-gray-700/90 hover:text-gray-900/90 transition-all"
+              onClick={() => (statusUniversalBlock == 'new_proposal' ? setStatusUniversalBlock('none') : setStatusUniversalBlock('new_proposal'))}
+              data-tooltip-id="tooltip"
+              data-tooltip-content="Create proposal"
+              data-tooltip-delay-show={500}
+            >
+              <svg height="32" viewBox="0 0 24 24" width="32" xmlns="http://www.w3.org/2000/svg" className="m-2">
+                <path d="m14.414 0h-9.414a3 3 0 0 0 -3 3v21h20v-16.414zm.586 3.414 3.586 3.586h-3.586zm-11 18.586v-19a1 1 0 0 1 1-1h8v7h7v13zm9-8h3v2h-3v3h-2v-3h-3v-2h3v-3h2z" />
+              </svg>
+              <div className="font-bold hidden md:block">New{'\u00A0'}proposal</div>
+            </button>
+          </div>
+          <div className="hidden md:block col-start-2 col-span-2 text-xs place-self-start">
+            {/* <div className="flex font-bold">
+                <div>
+                  Treasury{'\u00A0'}-{'\u00A0'}
+                </div>
+              <div>{balanceDAO[1]}</div>
+              <div>{'\u00A0'}CLO</div>
+            </div>
+            <div className="flex font-bold">
+              <div>{balanceTokenDAO?.balance}{'\u00A0'}</div>
+              <div>{balanceTokenDAO?.token}</div>
+            </div>
+            <div className="flex text-xs">
+              <input
+                id="input_token_addr"
+                type="text"
+                placeholder="Paste token address here"
+                className="py-0.5 px-1 rounded-md border-2 border-gray-500/90 text-[11px]"
+              ></input>
+              <button
+                id={'check_token_addr'}
+                className="bg-gray-500/90 shadow-inner hover:shadow-gray-300/70 py-1 px-1 mx-2 rounded-md text-white"
+                onClick={() => handleSetTokenAddress(document.getElementById('input_token_addr').value)}
+              >
+                Check
+              </button>
+            </div> */}
+          </div>
+          <div className="col-start-2 md:col-start-4 flex place-items-center justify-self-end">
             <button
               className="fill-gray-700/90 hover:fill-gray-900/90 transition-all"
+              onClick={() => (statusUniversalBlock == 'balances' ? setStatusUniversalBlock('none') : setStatusUniversalBlock('balances'))}
+              data-tooltip-id="tooltip"
+              data-tooltip-content="Treasury balances"
+              data-tooltip-delay-show={500}
+            >
+              <svg height="32" viewBox="0 0 24 24" width="32" xmlns="http://www.w3.org/2000/svg" className="m-2">
+                <path d="M21,6H5c-.859,0-1.672-.372-2.235-.999,.55-.614,1.349-1.001,2.235-1.001H23c.553,0,1-.448,1-1s-.447-1-1-1H5C2.239,2,0,4.239,0,7v10c0,2.761,2.239,5,5,5H21c1.657,0,3-1.343,3-3V9c0-1.657-1.343-3-3-3Zm1,13c0,.551-.448,1-1,1H5c-1.654,0-3-1.346-3-3V6.998c.854,.639,1.904,1.002,3,1.002H21c.552,0,1,.449,1,1v10Zm-2-5c0,.552-.448,1-1,1s-1-.448-1-1,.448-1,1-1,1,.448,1,1Z" />
+              </svg>
+            </button>
+            <button
+              className="fill-gray-700/90 hover:fill-gray-900/90 transition-all"
+              onClick={() => (statusUniversalBlock == 'members' ? setStatusUniversalBlock('none') : setStatusUniversalBlock('members'))}
               data-tooltip-id="tooltip"
               data-tooltip-content="Members DAO"
               data-tooltip-delay-show={500}
@@ -262,6 +341,7 @@ export default function DAO() {
             </button>
             <button
               className="fill-gray-700/90 hover:fill-gray-900/90 transition-all"
+              onClick={() => (statusUniversalBlock == 'settings' ? setStatusUniversalBlock('none') : setStatusUniversalBlock('settings'))}
               data-tooltip-id="tooltip"
               data-tooltip-content="Settings"
               data-tooltip-delay-show={500}
@@ -284,13 +364,69 @@ export default function DAO() {
             </button>
           </div>
         </div>
-        <div className="pt-2">
+        <div
+          className={`${
+            statusUniversalBlock != 'none' ? 'scale-y-100 max-h-[250px] p-2' : 'scale-y-0 max-h-0 p-0'
+          } text-center border-2 border-gray-700/90 mx-2 bg-gray-50 overflow-auto origin-top duration-500 transition-all`}
+        >
+          <div className={`${statusUniversalBlock == 'new_proposal' ? 'scale-y-100 h-full' : 'scale-y-0 h-0'} ease-in-out origin-top duration-500 transition-all`}>
+            <div>New proposal 1</div>
+            <div>New proposal 2</div>
+            <div>New proposal 3</div>
+            <div>New proposal 4</div>
+            <div>New proposal 5</div>
+            <div>New proposal 67</div>
+            <div>New proposal 7</div>
+            <div>New proposal 9</div>
+            <div>New proposal 9</div>
+            <div>New proposal 235</div>
+            <div>New proposal 23</div>
+            <div>New proposal 253</div>
+            <div>New proposal 23</div>
+            <div>New proposal 67</div>
+            <div>New proposal 57</div>
+            <div>New proposal 8</div>
+            <div>New proposal 9</div>
+            <div>New proposal 87</div>
+            <div>New proposal 987</div>
+            <div>New proposal 9</div>
+            <div>New proposal 7</div>
+            <div>New proposal 99999</div>
+          </div>
+          <div className={`${statusUniversalBlock == 'balances' ? 'scale-y-100 h-full' : 'scale-y-0 h-0'} ease-in-out origin-top duration-500 transition-all`}>
+
+            <div>Balances 1</div>
+            <div>Balances 2</div>
+            <div>Balances 3</div>
+            <div>Balances 4</div>
+          </div>
+          <div className={`${statusUniversalBlock == 'members' ? 'scale-y-100 h-full' : 'scale-y-0 h-0'} ease-in-out origin-top duration-500 transition-all`}>
+
+            <div>Members 1</div>
+            <div>Members 2</div>
+            <div>Members 3</div>
+            <div>Members 4</div>
+            <div>Members 4</div>
+            <div>Members 4</div>
+            <div>Members 100</div>
+          </div>
+          <div className={`${statusUniversalBlock == 'settings' ? 'scale-y-100 h-full' : 'scale-y-0 h-0'} ease-in-out origin-top duration-500 transition-all`}>
+            <div>Settings 1</div>
+            <div>Settings 2</div>
+            <div>Settings 3</div>
+            <div>Settings 4</div>
+            <div>Settings 4</div>
+            <div>Settings 4</div>
+            <div>Settings 100</div>
+          </div>
+        </div>
+        <div className="pt-1">
           {proposalsList
             ? proposalsList.map((prop, index) => (
                 <div
                   key={'proposal_' + (index + 1)}
                   id={'proposal_' + (index + 1)}
-                  className=" relative mx-2 p-2 mt-2 grid grid-cols-3 border-2 border-solid border-green-500 rounded-lg text-xs bg-gray-300/90"
+                  className=" relative mx-2 p-2 mt-2 grid grid-cols-3 border-2 border-solid border-gray-700/90 rounded-lg text-xs bg-gray-300/90"
                 >
                   <div className="absolute flex top-1 right-2 text-xl font-bold text-gray-600/70">
                     <div
@@ -318,7 +454,7 @@ export default function DAO() {
                   <div className="col-start-1 col-span-3 md:col-span-2">
                     <div>Start voting - {humanDate(prop[1])}</div>
                     <div>End voting - {humanDate(prop[3])}</div>
-                    {/* <div>Status - {statuses[prop[5]]}</div> */}
+                    <div>Status - {statuses[prop[5]]}</div>
                     <div>Reward - {Web3.utils.fromWei(prop[2], 'ether')} CLO</div>
                     <div className="hidden md:flex" onClick={() => (navigator.clipboard.writeText(prop[4]), setStatus('Creator address copied'))}>
                       <div>
@@ -424,7 +560,7 @@ export default function DAO() {
                         id={'input_abi_' + prop[0]}
                         type="text"
                         placeholder="Paste ABI here"
-                        className="py-0.5 px-1 rounded-md border-2 border-gray-500/90"
+                        className="py-0.5 px-1 rounded-md border-2 border-gray-500/90 text-[11px]"
                       ></input>
                       <button
                         id={'add_abi_' + prop[0]}

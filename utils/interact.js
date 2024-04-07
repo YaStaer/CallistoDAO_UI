@@ -9,7 +9,7 @@ export const web3 = new Web3(netSettings.rpc)
 export const contractGovernanceDAO = require('../artifacts/contracts/GovernanceDAO.sol/GovernanceDAO.json')
 const GovernanceDAOcontract = new web3.eth.Contract(contractGovernanceDAO.abi, netSettings.contracts.governanceDAO.contractAddress)
 export const contractTreasury = require('../artifacts/contracts/Treasury.sol/Treasury.json')
-const Treasurycontract = new web3.eth.Contract(contractTreasury.abi, netSettings.contracts.governanceDAO.contractAddress)
+const TreasuryContract = new web3.eth.Contract(contractTreasury.abi, netSettings.contracts.treasury.contractAddress)
 
 const gas_percent = 120
 
@@ -120,6 +120,9 @@ export const parseSource = data => {
 }
 
 export const parseComment = comment => {
+  if (!comment) {
+    return 'Comment\u00A0-\u00A0(no comment added)'
+  }
   const temp = comment.split(' ')
   const arr = []
   for (const i = 0; i < temp.length; i++) {
@@ -136,6 +139,33 @@ export const parseComment = comment => {
   // console.log(temp)
   // console.log(arr)
   return 'Comment\u00A0-\u00A0' + arr.join('\u00A0')
+}
+
+export const getTreasuryBalanceDAO = async () => {
+  const addr = await TreasuryContract.methods.callistoCommunity().call()
+  const balance = await TreasuryContract.methods.getRecipientData(addr).call()
+  return [Web3.utils.fromWei(balance[0], 'ether'), Web3.utils.fromWei(balance[1], 'ether')]
+}
+
+export const getTreasuryTokenBalanceDAO = async addr => {
+  const balance = {
+    balance: 0,
+    token: '',
+    error: ''
+  }
+  try {
+    const resp = await TreasuryContract.methods.getBalanceToken(addr).call()
+    balance.balance = toEther(resp[0], resp[1])
+    balance.token = resp[2]
+  } catch (err) {
+    if (!addr) {
+      balance.error = 'Paste token address'
+    } else {
+      balance.error = 'Incorrect token address'
+    }
+  }
+  console.log(balance)
+  return balance
 }
 
 export const getUserDAO = async wallet => {
