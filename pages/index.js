@@ -30,6 +30,7 @@ import {
   Web3
 } from '../utils/interact'
 import StatusModal from '../utils/statusModal'
+import Modal from '../utils/modal'
 
 export default function DAO() {
   const statuses = {
@@ -52,12 +53,18 @@ export default function DAO() {
   const [proposalsList, setProposalsList] = useState(null)
   const [proposalID, setProposalID] = useState(0)
   const [balanceDAO, setBalanceDAO] = useState([])
-  const [balanceTokenDAO, setBalanceTokenDAO] = useState({})
+  const [trackedTokensDAO, setTrackedTokensDAO] = useState({})
+  const [balancesTrackedTokensDAO, setBalancesTrackedTokensDAO] = useState({})
   const [knownContracts, setKnownContracts] = useState({})
 
   const [status, setStatus] = useState('')
   const [statusModalActive, setStatusModalActive] = useState(false)
-  const [statusUniversalBlock, setStatusUniversalBlock] = useState('none')
+
+  const [balancesModalActive, setBalancesModalActive] = useState(false)
+  const [usersModalActive, setUsersModalActive] = useState(false)
+  const [settingsModalActive, setSettingsModalActive] = useState(false)
+
+  const [statusCreateBlock, setStatusCreateBlock] = useState(false)
 
   // эффекты onboard
   useEffect(() => {
@@ -98,6 +105,7 @@ export default function DAO() {
       setUsersList(await getUsersList())
       setKnownContracts(JSON.parse(window.localStorage.getItem('knownContracts')))
       setBalanceDAO(await getTreasuryBalanceDAO())
+      setTrackedTokensDAO(JSON.parse(window.localStorage.getItem('trackedTokens')))
     }
     init()
   }, [])
@@ -126,6 +134,18 @@ export default function DAO() {
     }
     getProps()
   }, [proposalID])
+
+  useEffect(() => {
+    const getBalances = async () => {
+      if (balancesModalActive && trackedTokensDAO) {
+        for (const [key, value] of Object.entries(trackedTokensDAO)) {
+          const balance = await getTreasuryTokenBalanceDAO(key)
+          balancesTrackedTokensDAO[key] = balance.balance
+        }
+      }
+    }
+    getBalances()
+  }, [trackedTokensDAO, balancesModalActive])
 
   useEffect(() => {
     const set_status = async () => {
@@ -177,14 +197,32 @@ export default function DAO() {
   }
 
   const handleSetTokenAddress = async addr => {
-    const balance = await getTreasuryTokenBalanceDAO(addr)
-    if (balance.error) {
-      setStatus(balance.error)
-      document.getElementById('input_token_addr').value = ''
-    } else {
-      setBalanceTokenDAO(balance)
-      document.getElementById('input_token_addr').value = ''
+    const trackedTokens = JSON.parse(window.localStorage.getItem('trackedTokens'))
+    if (!trackedTokens) {
+      trackedTokens = {}
     }
+    const balance = await getTreasuryTokenBalanceDAO(addr)
+    if (balance.token) {
+      if (trackedTokens[Web3.utils.toChecksumAddress(addr)]) {
+        setStatus('Token already tracked')
+      } else {
+        trackedTokens[Web3.utils.toChecksumAddress(addr)] = balance.token
+        window.localStorage.setItem('trackedTokens', JSON.stringify(trackedTokens))
+        setStatus('Token added')
+      }
+    } else {
+      setStatus(balance.error)
+    }
+    setTrackedTokensDAO(trackedTokens)
+    document.getElementById('input_token_addr').value = ''
+  }
+
+  const handleDeleteTokenAddress = addr => {
+    const trackedTokens = trackedTokensDAO
+    delete trackedTokens[addr]
+    setTrackedTokensDAO(trackedTokens)
+    window.localStorage.setItem('trackedTokens', JSON.stringify(trackedTokens))
+    setStatus('Token deleted')
   }
 
   const handleRefresh = () => {
@@ -222,7 +260,7 @@ export default function DAO() {
                   src={`data:image/png;base64,${getAvatar(userDao[3])}`}
                   className="my-1 hidden md:block border border-gray-400 float-left h-[32px] rounded-full"
                 ></img>
-                <div className="font-bold px-2">{userDao[4]}</div>
+                <div className="font-bold px-2 truncate">{userDao[4]}</div>
                 <div className="px-3 text-[12px] grid grid-cols-2">
                   <div className="col-start-1">Proposals</div>
                   <div className="ml-2 font-bold col-start-2">{totalVoting - Number(userDao[2])}</div>
@@ -273,11 +311,18 @@ export default function DAO() {
         )}
       </div>
       <div className="mt-2 mb-[75px] w-11/12 xl:w-[1200px] shadow-md bg-gray-100/70">
+        <div className="text-center text-gray-700/90 text-sm md:text-base">
+          Comunity{'\u00A0'}treasury{'\u00A0'}balance{' '}
+          <b>
+            {balanceDAO[1]}
+            {'\u00A0'}CLO
+          </b>
+        </div>
         <div className="px-3 py-1 grid grid-cols-2 md:grid-cols-4 place-items-center w-full">
           <div className="col-start-1 flex place-items-center justify-self-start">
             <button
               className="col-start-1 flex place-items-center justify-self-start fill-gray-700/90 hover:fill-gray-900/90 text-gray-700/90 hover:text-gray-900/90 transition-all"
-              onClick={() => (statusUniversalBlock == 'new_proposal' ? setStatusUniversalBlock('none') : setStatusUniversalBlock('new_proposal'))}
+              onClick={() => (statusCreateBlock ? setStatusCreateBlock(false) : setStatusCreateBlock(true))}
               data-tooltip-id="tooltip"
               data-tooltip-content="Create proposal"
               data-tooltip-delay-show={500}
@@ -288,38 +333,10 @@ export default function DAO() {
               <div className="font-bold hidden md:block">New{'\u00A0'}proposal</div>
             </button>
           </div>
-          <div className="hidden md:block col-start-2 col-span-2 text-xs place-self-start">
-            {/* <div className="flex font-bold">
-                <div>
-                  Treasury{'\u00A0'}-{'\u00A0'}
-                </div>
-              <div>{balanceDAO[1]}</div>
-              <div>{'\u00A0'}CLO</div>
-            </div>
-            <div className="flex font-bold">
-              <div>{balanceTokenDAO?.balance}{'\u00A0'}</div>
-              <div>{balanceTokenDAO?.token}</div>
-            </div>
-            <div className="flex text-xs">
-              <input
-                id="input_token_addr"
-                type="text"
-                placeholder="Paste token address here"
-                className="py-0.5 px-1 rounded-md border-2 border-gray-500/90 text-[11px]"
-              ></input>
-              <button
-                id={'check_token_addr'}
-                className="bg-gray-500/90 shadow-inner hover:shadow-gray-300/70 py-1 px-1 mx-2 rounded-md text-white"
-                onClick={() => handleSetTokenAddress(document.getElementById('input_token_addr').value)}
-              >
-                Check
-              </button>
-            </div> */}
-          </div>
           <div className="col-start-2 md:col-start-4 flex place-items-center justify-self-end">
             <button
               className="fill-gray-700/90 hover:fill-gray-900/90 transition-all"
-              onClick={() => (statusUniversalBlock == 'balances' ? setStatusUniversalBlock('none') : setStatusUniversalBlock('balances'))}
+              onClick={() => setBalancesModalActive(true)}
               data-tooltip-id="tooltip"
               data-tooltip-content="Treasury balances"
               data-tooltip-delay-show={500}
@@ -330,7 +347,7 @@ export default function DAO() {
             </button>
             <button
               className="fill-gray-700/90 hover:fill-gray-900/90 transition-all"
-              onClick={() => (statusUniversalBlock == 'members' ? setStatusUniversalBlock('none') : setStatusUniversalBlock('members'))}
+              // onClick={() => (statusCreateBlock == 'members' ? setStatusCreateBlock('none') : setStatusCreateBlock('members'))}
               data-tooltip-id="tooltip"
               data-tooltip-content="Members DAO"
               data-tooltip-delay-show={500}
@@ -341,7 +358,7 @@ export default function DAO() {
             </button>
             <button
               className="fill-gray-700/90 hover:fill-gray-900/90 transition-all"
-              onClick={() => (statusUniversalBlock == 'settings' ? setStatusUniversalBlock('none') : setStatusUniversalBlock('settings'))}
+              // onClick={() => (statusCreateBlock == 'settings' ? setStatusCreateBlock('none') : setStatusCreateBlock('settings'))}
               data-tooltip-id="tooltip"
               data-tooltip-content="Settings"
               data-tooltip-delay-show={500}
@@ -366,59 +383,16 @@ export default function DAO() {
         </div>
         <div
           className={`${
-            statusUniversalBlock != 'none' ? 'scale-y-100 max-h-[250px] p-2' : 'scale-y-0 max-h-0 p-0'
-          } text-center border-2 border-gray-700/90 mx-2 bg-gray-50 overflow-auto origin-top duration-500 transition-all`}
+            statusCreateBlock ? 'scale-y-100 max-h-screen p-2' : 'scale-y-0 max-h-0 p-0'
+          } text-center border-2 rounded-lg border-gray-700/90 mx-2 bg-gray-50 origin-top duration-500 transition-all`}
         >
-          <div className={`${statusUniversalBlock == 'new_proposal' ? 'scale-y-100 h-full' : 'scale-y-0 h-0'} ease-in-out origin-top duration-500 transition-all`}>
-            <div>New proposal 1</div>
-            <div>New proposal 2</div>
-            <div>New proposal 3</div>
-            <div>New proposal 4</div>
-            <div>New proposal 5</div>
-            <div>New proposal 67</div>
-            <div>New proposal 7</div>
-            <div>New proposal 9</div>
-            <div>New proposal 9</div>
-            <div>New proposal 235</div>
-            <div>New proposal 23</div>
-            <div>New proposal 253</div>
-            <div>New proposal 23</div>
-            <div>New proposal 67</div>
-            <div>New proposal 57</div>
-            <div>New proposal 8</div>
-            <div>New proposal 9</div>
-            <div>New proposal 87</div>
-            <div>New proposal 987</div>
-            <div>New proposal 9</div>
-            <div>New proposal 7</div>
-            <div>New proposal 99999</div>
-          </div>
-          <div className={`${statusUniversalBlock == 'balances' ? 'scale-y-100 h-full' : 'scale-y-0 h-0'} ease-in-out origin-top duration-500 transition-all`}>
-
-            <div>Balances 1</div>
-            <div>Balances 2</div>
-            <div>Balances 3</div>
-            <div>Balances 4</div>
-          </div>
-          <div className={`${statusUniversalBlock == 'members' ? 'scale-y-100 h-full' : 'scale-y-0 h-0'} ease-in-out origin-top duration-500 transition-all`}>
-
-            <div>Members 1</div>
-            <div>Members 2</div>
-            <div>Members 3</div>
-            <div>Members 4</div>
-            <div>Members 4</div>
-            <div>Members 4</div>
-            <div>Members 100</div>
-          </div>
-          <div className={`${statusUniversalBlock == 'settings' ? 'scale-y-100 h-full' : 'scale-y-0 h-0'} ease-in-out origin-top duration-500 transition-all`}>
-            <div>Settings 1</div>
-            <div>Settings 2</div>
-            <div>Settings 3</div>
-            <div>Settings 4</div>
-            <div>Settings 4</div>
-            <div>Settings 4</div>
-            <div>Settings 100</div>
-          </div>
+          <div>New proposal 1</div>
+          <div>New proposal 2</div>
+          <div>New proposal 3</div>
+          <div>New proposal 4</div>
+          <div>New proposal 5</div>
+          <div>New proposal 67</div>
+          <div>New proposal 7</div>
         </div>
         <div className="pt-1">
           {proposalsList
@@ -719,6 +693,65 @@ export default function DAO() {
       <StatusModal active={statusModalActive} setActive={setStatusModalActive}>
         <div className="text-center font-bold text-base md:text-xl text-gray-200 w-full">{status}</div>
       </StatusModal>
+      <Modal active={balancesModalActive} setActive={setBalancesModalActive}>
+        <div className="p-2 pt-10 border-2 border-gray-700/70 rounded-lg fill-gray-900/90 text-gray-900/90">
+          <button
+            className="absolute top-1 right-1"
+            onClick={() => {
+              setBalancesModalActive(false)
+            }}
+          >
+            <svg width="64" height="64" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+              <path d="M22.6066 21.3934C22.2161 21.0029 21.5829 21.0029 21.1924 21.3934C20.8019 21.7839 20.8019 22.4171 21.1924 22.8076L22.6066 21.3934ZM40.9914 42.6066C41.3819 42.9971 42.0151 42.9971 42.4056 42.6066C42.7961 42.2161 42.7961 41.5829 42.4056 41.1924L40.9914 42.6066ZM21.1924 41.1924C20.8019 41.5829 20.8019 42.2161 21.1924 42.6066C21.5829 42.9971 22.2161 42.9971 22.6066 42.6066L21.1924 41.1924ZM42.4056 22.8076C42.7961 22.4171 42.7961 21.7839 42.4056 21.3934C42.0151 21.0029 41.3819 21.0029 40.9914 21.3934L42.4056 22.8076ZM21.1924 22.8076L40.9914 42.6066L42.4056 41.1924L22.6066 21.3934L21.1924 22.8076ZM22.6066 42.6066L42.4056 22.8076L40.9914 21.3934L21.1924 41.1924L22.6066 42.6066Z" />
+            </svg>
+          </button>
+          <div className="text-center text-base md:text-xl font-bold pb-4">
+            Comunity{'\u00A0'}treasury{'\u00A0'}balances
+          </div>
+          <div className="overflow-y-auto max-h-[50vh]">
+            <div className="flex justify-items-center px-2 text-sm md:text-base font-mono">
+              <div className="truncate">{balanceDAO[1]}</div>
+              <div>{'\u00A0'}CLO</div>
+            </div>
+            {trackedTokensDAO
+              ? Object.entries(trackedTokensDAO).map((token, index) => (
+                  <div key={'traked_token_' + index} className="flex justify-items-center px-2 text-sm md:text-base font-mono">
+                    <div className="truncate">{balancesTrackedTokensDAO[token[0]]}</div>
+                    <div>
+                      {'\u00A0'}
+                      {token[1]}
+                      {'\u00A0'}
+                      {'\u00A0'}
+                    </div>
+                    <div>
+                      <button onClick={() => handleDeleteTokenAddress(token[0])}>
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16">
+                          <path d="M16,8a1,1,0,0,0-1.414,0L12,10.586,9.414,8A1,1,0,0,0,8,9.414L10.586,12,8,14.586A1,1,0,0,0,9.414,16L12,13.414,14.586,16A1,1,0,0,0,16,14.586L13.414,12,16,9.414A1,1,0,0,0,16,8Z" />
+                          <path d="M12,0A12,12,0,1,0,24,12,12.013,12.013,0,0,0,12,0Zm0,22A10,10,0,1,1,22,12,10.011,10.011,0,0,1,12,22Z" />
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                ))
+              : ''}
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-8 gap-2 font-mono">
+            <input
+              id="input_token_addr"
+              type="text"
+              placeholder="Paste token address here"
+              className="mt-3 col-start-1 col-span-1 md:col-start-2 md:col-span-4 p-2 md:p-1 rounded-md border-2 border-gray-500/90 w-full text-xs md:text-base"
+            ></input>
+            <button
+              id={'check_token_addr'}
+              className="mt-0 md:mt-3 col-start-1 md:col-start-6 col-span-1 md:col-span-2 bg-gray-500/90 shadow-inner hover:shadow-gray-300/70 p-1 rounded-md text-white"
+              onClick={() => handleSetTokenAddress(document.getElementById('input_token_addr').value)}
+            >
+              Add to tracking
+            </button>
+          </div>
+        </div>
+      </Modal>
       <Tooltip id="tooltip" border="1px solid" style={{ zIndex: 99, borderRadius: 8, backgroundColor: 'rgb(90, 90, 90)', color: 'rgb(230, 230, 230)' }} />
     </div>
   )

@@ -151,12 +151,14 @@ export const getTreasuryTokenBalanceDAO = async addr => {
   const balance = {
     balance: 0,
     token: '',
+    decimal: '',
     error: ''
   }
   try {
     const resp = await TreasuryContract.methods.getBalanceToken(addr).call()
     balance.balance = toEther(resp[0], resp[1])
     balance.token = resp[2]
+    balance.decimal = resp[1]
   } catch (err) {
     if (!addr) {
       balance.error = 'Paste token address'
