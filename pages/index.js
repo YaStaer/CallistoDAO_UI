@@ -246,8 +246,8 @@ export default function DAO() {
   }
 
   return (
-    <div className="min-h-screen h-full w-full overflow-hidden flex flex-col items-center justify-start bg-gradient-to-b from-gray-100 via-gray-300 to-gray-100 selection:bg-gray-700/90">
-      <div className="bg-gray-300 h-[50px] w-full grid grid-cols-6 gap-2 place-items-center">
+    <div className="min-h-screen h-full w-full overflow-hidden flex flex-col items-center justify-start bg-gradient-to-b from-gray-300 via-gray-100 to-gray-300 selection:bg-gray-700/90">
+      <div className="bg-gray-400/70 h-[50px] w-full grid grid-cols-6 gap-2 place-items-center">
         <div className="ml-4 col-start-1 col-span-3 md:col-span-1 flex place-items-center">
           <img src="/images/Callisto_Logo.png" className="pl-2 h-[32px]" />
           <div className="mx-1 font-bold text-[22px]">Callisto{'\u00A0'}DAO</div>
@@ -310,14 +310,14 @@ export default function DAO() {
           </button>
         )}
       </div>
-      <div className="mt-2 mb-[75px] w-11/12 xl:w-[1200px] shadow-md bg-gray-100/70">
-        <div className="text-center text-gray-700/90 text-sm md:text-base">
-          Comunity{'\u00A0'}treasury{'\u00A0'}balance{' '}
-          <b>
-            {balanceDAO[1]}
-            {'\u00A0'}CLO
-          </b>
-        </div>
+      <div className="my-2 text-center text-gray-700/90 text-sm md:text-base">
+        Comunity{'\u00A0'}treasury{'\u00A0'}balance{' '}
+        <b>
+          {balanceDAO[1]}
+          {'\u00A0'}CLO
+        </b>
+      </div>
+      <div className="mb-[25px] w-11/12 xl:w-[1200px] shadow-md bg-gray-100/70">
         <div className="px-3 py-1 grid grid-cols-2 md:grid-cols-4 place-items-center w-full">
           <div className="col-start-1 flex place-items-center justify-self-start">
             <button
@@ -384,7 +384,7 @@ export default function DAO() {
         <div
           className={`${
             statusCreateBlock ? 'scale-y-100 max-h-screen p-2' : 'scale-y-0 max-h-0 p-0'
-          } text-center border-2 rounded-lg border-gray-700/90 mx-2 bg-gray-50 origin-top duration-500 transition-all`}
+          } text-center border-2 rounded-lg border-gray-700/90 mx-2 bg-gray-50 origin-top transition-all`}
         >
           <div>New proposal 1</div>
           <div>New proposal 2</div>
@@ -689,6 +689,16 @@ export default function DAO() {
             </svg>
           </button>
         </div>
+      </div>
+      <div className="bg-gray-400/70 h-[50px] w-full grid grid-cols-6 gap-2 place-items-center">
+        <div className="flex text-sm">
+          <div>Callisto{'\u00A0'}DAO{'\u00A0'}{new Date().getFullYear()}{'\u00A0'}</div>
+          <div>©</div>
+        </div>
+        {/* <img
+                  src={`data:image/png;base64,${getAvatar('0xfE85428fb7145BF17F7fBf7317bE091943CB70D5')}`}
+                  className="my-1 hidden md:block border border-gray-400 float-left h-[32px] rounded-full"
+                ></img> */}
       </div>
       <StatusModal active={statusModalActive} setActive={setStatusModalActive}>
         <div className="text-center font-bold text-base md:text-xl text-gray-200 w-full">{status}</div>
