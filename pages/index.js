@@ -16,7 +16,11 @@ import {
   execute,
   getAvatar,
   getClaimList,
+  getExpirePeriod,
+  getMinPaymentDAO,
+  getMinPaymentOther,
   getProposalsList,
+  getTotalCloseVoting,
   getTotalVoting,
   getTreasuryBalanceDAO,
   getTreasuryTokenBalanceDAO,
@@ -50,12 +54,18 @@ export default function DAO() {
   const [usersList, setUsersList] = useState('')
   const [claimsList, setClaimsList] = useState(null)
   const [totalVoting, setTotalVoting] = useState(null)
+  const [totalCloseVoting, setTotalCloseVoting] = useState(null)
+  const [expirePeriod, setExpirePeriod] = useState(null)
+  const [minPaymentDAO, setMinPaymentDAO] = useState(null)
+  const [minPaymentOther, setMinPaymentOther] = useState(null)
   const [proposalsList, setProposalsList] = useState(null)
   const [proposalID, setProposalID] = useState(0)
   const [balanceDAO, setBalanceDAO] = useState([])
   const [trackedTokensDAO, setTrackedTokensDAO] = useState({})
   const [balancesTrackedTokensDAO, setBalancesTrackedTokensDAO] = useState({})
   const [knownContracts, setKnownContracts] = useState({})
+
+  const [selectedContract, setSelectedContract] = useState(netSettings.contracts.treasury.contractAddress)
 
   const [status, setStatus] = useState('')
   const [statusModalActive, setStatusModalActive] = useState(false)
@@ -148,6 +158,19 @@ export default function DAO() {
   }, [trackedTokensDAO, balancesModalActive])
 
   useEffect(() => {
+    const getSettings = async () => {
+      if (settingsModalActive) {
+        setExpirePeriod(await getExpirePeriod())
+        setMinPaymentDAO(await getMinPaymentDAO())
+        setMinPaymentOther(await getMinPaymentOther())
+        setTotalCloseVoting(await getTotalCloseVoting())
+        setTotalVoting(await getTotalVoting())
+      }
+    }
+    getSettings()
+  }, [settingsModalActive])
+
+  useEffect(() => {
     const set_status = async () => {
       if (status) {
         setStatusModalActive(true)
@@ -175,10 +198,27 @@ export default function DAO() {
             setTimeout(async () => setClaimsList(await getClaimList(wallet, proposalID)), 500)
           }
         }
+      } else {
+        setStatusModalActive(false)
       }
     }
     set_status()
   }, [status])
+
+  useEffect(() => {
+    const handleEsc = event => {
+      if (event.key === 'Escape') {
+        setBalancesModalActive(false)
+        setUsersModalActive(false)
+        setSettingsModalActive(false)
+      }
+    }
+    window.addEventListener('keydown', handleEsc)
+
+    return () => {
+      window.removeEventListener('keydown', handleEsc)
+    }
+  }, [balancesModalActive, usersModalActive, settingsModalActive])
 
   const handleSetABI = (data, abi, address) => {
     const func = parseData(data, abi)
@@ -262,7 +302,7 @@ export default function DAO() {
                 ></img>
                 <div className="font-bold px-2 truncate">{userDao[4]}</div>
                 <div className="px-3 text-[12px] grid grid-cols-2">
-                  <div className="col-start-1">Proposals</div>
+                  <div className="col-start-1">Total{'\u00A0'}votings</div>
                   <div className="ml-2 font-bold col-start-2">{totalVoting - Number(userDao[2])}</div>
                   <div className="col-start-1">Participated</div>
                   <div className="ml-2 font-bold col-start-2">{userDao[1]}</div>
@@ -290,7 +330,7 @@ export default function DAO() {
                 <div className="flex place-items-center">
                   <img src={`data:image/png;base64,${getAvatar(userDao[3])}`} className="my-1 border border-gray-400 float-left h-[32px] rounded-full"></img>
                   <div className="px-3 text-[12px] grid grid-cols-3">
-                    <div className="col-start-1 col-span-2">Total{'\u00A0'}votes</div>
+                    <div className="col-start-1 col-span-2">Total{'\u00A0'}votings</div>
                     <div className="pl-2 font-bold col-start-3">{totalVoting - Number(userDao[2])}</div>
                     <div className="col-start-1 col-span-2">Participated</div>
                     <div className="pl-2 font-bold col-start-3">{userDao[1]}</div>
@@ -318,19 +358,19 @@ export default function DAO() {
         </b>
       </div>
       <div className="mb-[25px] w-11/12 xl:w-[1200px] shadow-md bg-gray-100/70">
-        <div className="px-3 py-1 grid grid-cols-2 md:grid-cols-4 place-items-center w-full">
+        <div className="px-3 pt-2 grid grid-cols-2 md:grid-cols-4 place-items-center w-full">
           <div className="col-start-1 flex place-items-center justify-self-start">
             <button
               className="col-start-1 flex place-items-center justify-self-start fill-gray-700/90 hover:fill-gray-900/90 text-gray-700/90 hover:text-gray-900/90 transition-all"
               onClick={() => (statusCreateBlock ? setStatusCreateBlock(false) : setStatusCreateBlock(true))}
               data-tooltip-id="tooltip"
-              data-tooltip-content="Create proposal"
+              data-tooltip-content="Create voting"
               data-tooltip-delay-show={500}
             >
               <svg height="32" viewBox="0 0 24 24" width="32" xmlns="http://www.w3.org/2000/svg" className="m-2">
                 <path d="m14.414 0h-9.414a3 3 0 0 0 -3 3v21h20v-16.414zm.586 3.414 3.586 3.586h-3.586zm-11 18.586v-19a1 1 0 0 1 1-1h8v7h7v13zm9-8h3v2h-3v3h-2v-3h-3v-2h3v-3h2z" />
               </svg>
-              <div className="font-bold hidden md:block">New{'\u00A0'}proposal</div>
+              <div className="font-bold hidden md:block">New{'\u00A0'}voting</div>
             </button>
           </div>
           <div className="col-start-2 md:col-start-4 flex place-items-center justify-self-end">
@@ -347,7 +387,7 @@ export default function DAO() {
             </button>
             <button
               className="fill-gray-700/90 hover:fill-gray-900/90 transition-all"
-              // onClick={() => (statusCreateBlock == 'members' ? setStatusCreateBlock('none') : setStatusCreateBlock('members'))}
+              onClick={() => setUsersModalActive(true)}
               data-tooltip-id="tooltip"
               data-tooltip-content="Members DAO"
               data-tooltip-delay-show={500}
@@ -358,7 +398,7 @@ export default function DAO() {
             </button>
             <button
               className="fill-gray-700/90 hover:fill-gray-900/90 transition-all"
-              // onClick={() => (statusCreateBlock == 'settings' ? setStatusCreateBlock('none') : setStatusCreateBlock('settings'))}
+              onClick={() => setSettingsModalActive(true)}
               data-tooltip-id="tooltip"
               data-tooltip-content="Settings"
               data-tooltip-delay-show={500}
@@ -384,15 +424,51 @@ export default function DAO() {
         <div
           className={`${
             statusCreateBlock ? 'scale-y-100 max-h-screen p-2' : 'scale-y-0 max-h-0 p-0'
-          } text-center border-2 rounded-lg border-gray-700/90 mx-2 bg-gray-50 origin-top transition-all`}
+          } grid justify-items-center border-2 rounded-lg border-gray-700/90 mx-2 bg-gray-50 origin-top transition-all`}
         >
-          <div>New proposal 1</div>
-          <div>New proposal 2</div>
-          <div>New proposal 3</div>
-          <div>New proposal 4</div>
-          <div>New proposal 5</div>
-          <div>New proposal 67</div>
-          <div>New proposal 7</div>
+          <div className="text-xl font-bold">New Voting</div>
+          <div className="grid justify-items-start w-full md:w-1/2 text-sm md:text-base">
+            <label htmlFor="contract_choise" className="text-sm px-2">
+              Select contract to interact
+            </label>
+            <select
+              id="contract_choise"
+              className="px-1 border-2 border-gray-600 rounded-lg w-full bg-gray-300/50"
+              onChange={e => setSelectedContract(e.target.value)}
+            >
+              <option value={netSettings.contracts.treasury.contractAddress}>Treasury</option>
+              <option value={netSettings.contracts.governanceDAO.contractAddress}>GovernanceDAO</option>
+              <option value="other">Other...</option>
+            </select>
+            <input
+              id="other_contract"
+              className={`${
+                selectedContract == netSettings.contracts.treasury.contractAddress || selectedContract == netSettings.contracts.governanceDAO.contractAddress
+                  ? 'hidden'
+                  : ''
+              } mt-2 px-2 border-2 border-gray-600 rounded-lg w-full`}
+              placeholder="Paste contact address here"
+              onChange={e => setSelectedContract(e.target.value)}
+            ></input>
+            <select className={`${
+                selectedContract == netSettings.contracts.treasury.contractAddress
+                  ? ''
+                  : 'hidden'
+              } mt-2 px-2 border-2 border-gray-600 rounded-lg w-full`}>
+                {contractTreasury.abi.filter((func) => func.type == 'function' && func.stateMutability != 'view').map((fun, index) => (
+                  <option>{fun.name}</option>
+                ))}
+            </select>
+            <select className={`${
+                selectedContract == netSettings.contracts.governanceDAO.contractAddress
+                  ? ''
+                  : 'hidden'
+              } mt-2 px-2 border-2 border-gray-600 rounded-lg w-full`}>
+                {contractGovernanceDAO.abi.filter((func) => func.type == 'function' && func.stateMutability != 'view').map((fun, index) => (
+                  <option>{fun.name}</option>
+                ))}
+            </select>
+          </div>
         </div>
         <div className="pt-1">
           {proposalsList
@@ -692,13 +768,13 @@ export default function DAO() {
       </div>
       <div className="bg-gray-400/70 h-[50px] w-full grid grid-cols-6 gap-2 place-items-center">
         <div className="flex text-sm">
-          <div>Callisto{'\u00A0'}DAO{'\u00A0'}{new Date().getFullYear()}{'\u00A0'}</div>
+          <div>
+            Callisto{'\u00A0'}DAO{'\u00A0'}
+            {new Date().getFullYear()}
+            {'\u00A0'}
+          </div>
           <div>©</div>
         </div>
-        {/* <img
-                  src={`data:image/png;base64,${getAvatar('0xfE85428fb7145BF17F7fBf7317bE091943CB70D5')}`}
-                  className="my-1 hidden md:block border border-gray-400 float-left h-[32px] rounded-full"
-                ></img> */}
       </div>
       <StatusModal active={statusModalActive} setActive={setStatusModalActive}>
         <div className="text-center font-bold text-base md:text-xl text-gray-200 w-full">{status}</div>
@@ -718,32 +794,32 @@ export default function DAO() {
           <div className="text-center text-base md:text-xl font-bold pb-4">
             Comunity{'\u00A0'}treasury{'\u00A0'}balances
           </div>
-          <div className="overflow-y-auto max-h-[50vh]">
-            <div className="flex justify-items-center px-2 text-sm md:text-base font-mono">
-              <div className="truncate">{balanceDAO[1]}</div>
-              <div>{'\u00A0'}CLO</div>
-            </div>
-            {trackedTokensDAO
-              ? Object.entries(trackedTokensDAO).map((token, index) => (
-                  <div key={'traked_token_' + index} className="flex justify-items-center px-2 text-sm md:text-base font-mono">
-                    <div className="truncate">{balancesTrackedTokensDAO[token[0]]}</div>
-                    <div>
-                      {'\u00A0'}
-                      {token[1]}
-                      {'\u00A0'}
-                      {'\u00A0'}
-                    </div>
-                    <div>
+          <div className="overflow-y-auto max-h-[50vh] grid justify-items-center">
+            <div className="grid justify-items-stretch">
+              <div className="flex justify-items-center px-2 text-sm md:text-base font-mono">
+                <div className="truncate">{balanceDAO[1]}</div>
+                <div>{'\u00A0'}CLO</div>
+              </div>
+              {trackedTokensDAO
+                ? Object.entries(trackedTokensDAO).map((token, index) => (
+                    <div key={'traked_token_' + index} className="flex place-items-center px-2 text-sm md:text-base font-mono">
+                      <div className="truncate">{balancesTrackedTokensDAO[token[0]]}</div>
+                      <div>
+                        {'\u00A0'}
+                        {token[1]}
+                        {'\u00A0'}
+                        {'\u00A0'}
+                      </div>
                       <button onClick={() => handleDeleteTokenAddress(token[0])}>
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16">
-                          <path d="M16,8a1,1,0,0,0-1.414,0L12,10.586,9.414,8A1,1,0,0,0,8,9.414L10.586,12,8,14.586A1,1,0,0,0,9.414,16L12,13.414,14.586,16A1,1,0,0,0,16,14.586L13.414,12,16,9.414A1,1,0,0,0,16,8Z" />
-                          <path d="M12,0A12,12,0,1,0,24,12,12.013,12.013,0,0,0,12,0Zm0,22A10,10,0,1,1,22,12,10.011,10.011,0,0,1,12,22Z" />
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18">
+                          <polygon points="16.879 9.242 14.758 7.121 12 9.879 9.242 7.121 7.121 9.242 9.879 12 7.121 14.758 9.242 16.879 12 14.121 14.758 16.879 16.879 14.758 14.121 12 16.879 9.242" />
+                          <path d="M12,24A12,12,0,1,1,24,12,12.013,12.013,0,0,1,12,24ZM12,3a9,9,0,1,0,9,9A9.01,9.01,0,0,0,12,3Z" />
                         </svg>
                       </button>
                     </div>
-                  </div>
-                ))
-              : ''}
+                  ))
+                : ''}
+            </div>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-8 gap-2 font-mono">
             <input
@@ -759,6 +835,156 @@ export default function DAO() {
             >
               Add to tracking
             </button>
+          </div>
+        </div>
+      </Modal>
+      <Modal active={usersModalActive} setActive={setUsersModalActive}>
+        <div className="p-2 pt-10 border-2 border-gray-700/70 rounded-lg fill-gray-900/90 text-gray-900/90">
+          <button
+            className="absolute top-1 right-1"
+            onClick={() => {
+              setUsersModalActive(false)
+            }}
+          >
+            <svg width="64" height="64" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+              <path d="M22.6066 21.3934C22.2161 21.0029 21.5829 21.0029 21.1924 21.3934C20.8019 21.7839 20.8019 22.4171 21.1924 22.8076L22.6066 21.3934ZM40.9914 42.6066C41.3819 42.9971 42.0151 42.9971 42.4056 42.6066C42.7961 42.2161 42.7961 41.5829 42.4056 41.1924L40.9914 42.6066ZM21.1924 41.1924C20.8019 41.5829 20.8019 42.2161 21.1924 42.6066C21.5829 42.9971 22.2161 42.9971 22.6066 42.6066L21.1924 41.1924ZM42.4056 22.8076C42.7961 22.4171 42.7961 21.7839 42.4056 21.3934C42.0151 21.0029 41.3819 21.0029 40.9914 21.3934L42.4056 22.8076ZM21.1924 22.8076L40.9914 42.6066L42.4056 41.1924L22.6066 21.3934L21.1924 22.8076ZM22.6066 42.6066L42.4056 22.8076L40.9914 21.3934L21.1924 41.1924L22.6066 42.6066Z" />
+            </svg>
+          </button>
+          <div className="text-center text-base md:text-xl font-bold pb-4">DAO{'\u00A0'}members</div>
+          <div className="overflow-y-auto max-h-[50vh] px-4 md:px-1 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-2 justify-items-center">
+            {usersList
+              ? Object.entries(usersList).map(user => (
+                  <div
+                    key={'user_' + user[1].index}
+                    className={`relative w-full p-1 grid grid-cols-4 place-items-center bg-gray-400/30 border-2 ${
+                      totalVoting - Number(user[1].entered) < 10
+                        ? 'border-gray-500'
+                        : Math.round((Number(user[1].votes) / (totalVoting - Number(user[1].entered))) * 100) > 74
+                        ? 'border-green-700'
+                        : Math.round((Number(user[1].votes) / (totalVoting - Number(user[1].entered))) * 100) > 49
+                        ? 'border-yellow-700'
+                        : 'border-red-700'
+                    } rounded-lg`}
+                  >
+                    <div className="absolute flex top-1 right-2 text-sm font-bold text-gray-600/70">#{user[1].index}</div>
+                    <div className="col-start-1 col-span-1">
+                      {' '}
+                      <img
+                        src={`data:image/png;base64,${getAvatar(user[1].address)}`}
+                        className="border-2 border-gray-400 h-[48px] md:h-[40px] rounded-full"
+                      ></img>
+                    </div>
+                    <div className="w-full col-start-2 col-span-3 text-sm font-bold">
+                      {/* <div>{user[1].index}</div> */}
+                      <div>{user[1].nickname.length > 14 ? user[1].nickname.slice(0, 12) + '...' : user[1].nickname}</div>
+                      <div>{user[1].address.slice(0, 8) + '...' + user[1].address.slice(-6)}</div>
+                      <div className="flex">
+                        <div>
+                          {user[1].votes} / {totalVoting - Number(user[1].entered)}
+                        </div>
+                        <div>{'\u00A0'}(</div>
+                        <div
+                          className={`${
+                            totalVoting - Number(user[1].entered) < 10
+                              ? ''
+                              : Math.round((Number(user[1].votes) / (totalVoting - Number(user[1].entered))) * 100) > 74
+                              ? 'text-green-700'
+                              : Math.round((Number(user[1].votes) / (totalVoting - Number(user[1].entered))) * 100) > 49
+                              ? 'text-yellow-700'
+                              : 'text-red-700'
+                          }`}
+                        >
+                          {Math.round((Number(user[1].votes) / (totalVoting - Number(user[1].entered))) * 100)}%
+                        </div>
+                        <div>)</div>
+                      </div>
+                      <div></div>
+                    </div>
+                  </div>
+                ))
+              : ''}
+          </div>
+        </div>
+      </Modal>
+      <Modal active={settingsModalActive} setActive={setSettingsModalActive}>
+        <div className="p-2 pt-10 border-2 border-gray-700/70 rounded-lg fill-gray-900/90 text-gray-900/90">
+          <button
+            className="absolute top-1 right-1"
+            onClick={() => {
+              setSettingsModalActive(false)
+            }}
+          >
+            <svg width="64" height="64" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+              <path d="M22.6066 21.3934C22.2161 21.0029 21.5829 21.0029 21.1924 21.3934C20.8019 21.7839 20.8019 22.4171 21.1924 22.8076L22.6066 21.3934ZM40.9914 42.6066C41.3819 42.9971 42.0151 42.9971 42.4056 42.6066C42.7961 42.2161 42.7961 41.5829 42.4056 41.1924L40.9914 42.6066ZM21.1924 41.1924C20.8019 41.5829 20.8019 42.2161 21.1924 42.6066C21.5829 42.9971 22.2161 42.9971 22.6066 42.6066L21.1924 41.1924ZM42.4056 22.8076C42.7961 22.4171 42.7961 21.7839 42.4056 21.3934C42.0151 21.0029 41.3819 21.0029 40.9914 21.3934L42.4056 22.8076ZM21.1924 22.8076L40.9914 42.6066L42.4056 41.1924L22.6066 21.3934L21.1924 22.8076ZM22.6066 42.6066L42.4056 22.8076L40.9914 21.3934L21.1924 41.1924L22.6066 42.6066Z" />
+            </svg>
+          </button>
+          <div className="text-center text-base md:text-xl font-bold pb-4">DAO{'\u00A0'}settings</div>
+          <div className="overflow-y-auto max-h-[50vh] grid justify-items-center">
+            <div className="grid justify-items-stretch text-xs md:text-base">
+              <div className="flex px-2">
+                <div>Treasury:{'\u00A0'}</div>
+                <div
+                  className="hidden md:block font-mono cursor-copy font-bold"
+                  onClick={() => (navigator.clipboard.writeText(netSettings.contracts.treasury.contractAddress), setStatus('Treasury address copied'))}
+                >
+                  {netSettings.contracts.treasury.contractAddress}
+                </div>
+                <div
+                  className="md:hidden font-mono font-bold"
+                  onClick={() => (navigator.clipboard.writeText(netSettings.contracts.treasury.contractAddress), setStatus('Treasury address copied'))}
+                >
+                  {netSettings.contracts.treasury.contractAddress.slice(0, 8) + '...' + netSettings.contracts.treasury.contractAddress.slice(-6)}
+                </div>
+              </div>
+              <div className="flex px-2">
+                <div>DAO:{'\u00A0'}</div>
+                <div
+                  className="hidden md:block font-mono cursor-copy font-bold"
+                  onClick={() => (navigator.clipboard.writeText(netSettings.contracts.governanceDAO.contractAddress), setStatus('DAO address copied'))}
+                >
+                  {netSettings.contracts.governanceDAO.contractAddress}
+                </div>
+                <div
+                  className="md:hidden font-mono font-bold"
+                  onClick={() => (navigator.clipboard.writeText(netSettings.contracts.governanceDAO.contractAddress), setStatus('DAO address copied'))}
+                >
+                  {netSettings.contracts.governanceDAO.contractAddress.slice(0, 8) + '...' + netSettings.contracts.governanceDAO.contractAddress.slice(-6)}
+                </div>
+              </div>
+              <div className="flex px-2">
+                <div>DAO percent of treasury:{'\u00A0'}</div>
+                <div className="font-bold">{balanceDAO[0]}%</div>
+              </div>
+              <div className="flex px-2">
+                <div>Total votings:{'\u00A0'}</div>
+                <div className="font-bold">{totalVoting}</div>
+              </div>
+              <div className="flex px-2">
+                <div>Completed votings:{'\u00A0'}</div>
+                <div className="font-bold">{totalCloseVoting}</div>
+              </div>
+              <div className="flex px-2">
+                <div>Voting period:{'\u00A0'}</div>
+                <div className="font-bold">
+                  {expirePeriod}
+                  {'\u00A0'}days
+                </div>
+              </div>
+              <div className="flex px-2">
+                <div>Create voting for DAO members:{'\u00A0'}</div>
+                <div className="font-bold">
+                  {minPaymentDAO}
+                  {'\u00A0'}CLO
+                </div>
+              </div>
+              <div className="flex px-2">
+                <div>Create voting not for DAO members:{'\u00A0'}</div>
+                <div className="font-bold">
+                  {minPaymentOther}
+                  {'\u00A0'}CLO
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </Modal>

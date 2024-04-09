@@ -191,13 +191,13 @@ export const getUsersList = async () => {
         address: resp[id][3],
         nickname: resp[id][4]
       }
-      users[resp[id][4]] = {
-        index: resp[id][0],
-        votes: resp[id][1],
-        entered: resp[id][2],
-        address: resp[id][3],
-        nickname: resp[id][4]
-      }
+      // users[resp[id][4]] = {
+      //   index: resp[id][0],
+      //   votes: resp[id][1],
+      //   entered: resp[id][2],
+      //   address: resp[id][3],
+      //   nickname: resp[id][4]
+      // }
       id++
     }
     if (!Number(resp[resp.length - 1][0])) {
@@ -213,6 +213,32 @@ export const getUsersList = async () => {
 export const getTotalVoting = async () => {
   const total = await GovernanceDAOcontract.methods.total_voting().call()
   return total
+}
+
+export const getTotalCloseVoting = async () => {
+  const total = await GovernanceDAOcontract.methods.total_close_voting().call()
+  return total
+}
+
+export const getExpirePeriod = async () => {
+  const resp = await GovernanceDAOcontract.methods.expire_period().call()
+  const period = resp / 86400
+  console.log(period)
+  return period
+}
+
+export const getMinPaymentDAO = async () => {
+  const resp = await GovernanceDAOcontract.methods.min_payment_DAO().call()
+  const payment = Web3.utils.fromWei(resp, 'ether')
+  console.log(payment)
+  return payment
+}
+
+export const getMinPaymentOther = async () => {
+  const resp = await GovernanceDAOcontract.methods.min_payment_other().call()
+  const payment = Web3.utils.fromWei(resp, 'ether')
+  console.log(payment)
+  return payment
 }
 
 export const getProposalsList = async id => {
