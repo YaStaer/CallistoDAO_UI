@@ -1,11 +1,8 @@
-import Link from 'next/link'
 import { useState, useEffect, useRef } from 'react'
 import { Tooltip } from 'react-tooltip'
-import { useClickOutside } from '../utils/useClickOutside'
-import { BN } from 'bn.js'
 import { netSettings } from '../dapp.config'
 import { initOnboard } from '../utils/onboard'
-import { useConnectWallet, useSetChain, useWallets } from '@web3-onboard/react'
+import { useConnectWallet, useWallets } from '@web3-onboard/react'
 import {
   cards,
   claim,
@@ -32,8 +29,7 @@ import {
   parseData,
   parseSource,
   vote,
-  Web3,
-  web3
+  Web3
 } from '../utils/interact'
 import StatusModal from '../utils/statusModal'
 import Modal from '../utils/modal'
@@ -45,9 +41,7 @@ export default function DAO() {
     3: 'Executed'
   }
 
-  // кошельки, сети и подключения
-  const [{ wallet, connecting }, connect, disconnect] = useConnectWallet()
-  // const [{ chains, connectedChain, settingChain }, setChain] = useSetChain()
+  const [{ wallet }, connect, disconnect] = useConnectWallet()
   const connectedWallets = useWallets()
 
   const [onboard, setOnboard] = useState(null)
@@ -69,7 +63,6 @@ export default function DAO() {
 
   const [selectedContract, setSelectedContract] = useState('')
   const [selectedFunction, setSelectedFunction] = useState('')
-  // const [pastedData, setPastedData] = useState('')
   const [pastedABI, setPastedABI] = useState('')
 
   const [status, setStatus] = useState('')
@@ -81,7 +74,6 @@ export default function DAO() {
 
   const [statusCreateBlock, setStatusCreateBlock] = useState(false)
 
-  // эффекты onboard
   useEffect(() => {
     setOnboard(initOnboard)
   }, [])
@@ -117,6 +109,8 @@ export default function DAO() {
       const votings = await getTotalVoting()
       setTotalVoting(votings)
       setProposalID(votings)
+      setMinPaymentDAO(await getMinPaymentDAO())
+      setMinPaymentOther(await getMinPaymentOther())
       setUsersList(await getUsersList())
       setKnownContracts(JSON.parse(window.localStorage.getItem('knownContracts')))
       setBalanceDAO(await getTreasuryBalanceDAO())
@@ -209,8 +203,6 @@ export default function DAO() {
     const getSettings = async () => {
       if (settingsModalActive) {
         setExpirePeriod(await getExpirePeriod())
-        setMinPaymentDAO(await getMinPaymentDAO())
-        setMinPaymentOther(await getMinPaymentOther())
         setTotalCloseVoting(await getTotalCloseVoting())
         setTotalVoting(await getTotalVoting())
       }
@@ -238,10 +230,8 @@ export default function DAO() {
         setUsersList(await getUsersList())
 
         if (totalVoting == proposalID) {
-          // Если на первой странице
           const votings = await getTotalVoting()
           if (votings != totalVoting) {
-            // Если были добавлены пропосалы
             setTimeout(async () => setTotalVoting(votings), 500)
             setTimeout(async () => setProposalID(votings), 500)
           } else {
@@ -364,10 +354,6 @@ export default function DAO() {
         parameters.push(par.value)
       }
     }
-    // console.log(selectedFunction)
-    // console.log(parameters)
-
-    // console.log(web3.eth.abi.encodeFunctionCall(JSON.parse(selectedFunction), parameters))
     setStatus(
       await createVoting(
         wallet,
@@ -567,7 +553,6 @@ export default function DAO() {
                   placeholder="Paste contract address here"
                   onChange={e => setSelectedContract(e.target.value)}
                 ></input>
-                {/* новые поля */}
                 <div className="mt-2 w-full">
                   <div className={`${pastedABI ? 'hidden' : ''} w-full`}>
                     <div className="p-2 border border-gray-400/50 rounded-lg">
@@ -648,95 +633,6 @@ export default function DAO() {
           ) : (
             <div className="text-base md:text-xl font-bold">Please connect wallet to create new proposal</div>
           )}
-
-          {/* переписать!!!! */}
-          {/* <div className="mt-2 w-full">
-              <div className={`${selectedContract == netSettings.contracts.treasury.contractAddress ? '' : 'hidden'}`}>
-                <label htmlFor="function_choise" className="text-sm px-2">
-                  Select function to interact
-                </label>
-                <select
-                  id="function_choise"
-                  className="px-1 mb-2 border-2 border-gray-600 rounded-lg w-full bg-gray-300/50"
-                  onChange={e => setSelectedFunction(e.target.value)}
-                  value={selectedFunction}
-                >
-                  {contractTreasury.abi
-                    .filter(func => func.type == 'function' && func.stateMutability != 'view' && func.stateMutability != 'pure')
-                    .map((fun, index) => (
-                      <option key={index} value={JSON.stringify(fun)}>
-                        {fun.name}
-                      </option>
-                    ))}
-                </select>
-                <label htmlFor="params" className="text-sm px-2">
-                  Parameters
-                </label>
-                <div id="params" className="px-2 pb-2 border border-gray-400/50 rounded-lg">
-                  {selectedFunction &&
-                    JSON.parse(selectedFunction).inputs.map((inp, index) => (
-                      <div className="flex place-items-center">
-                        <label className="mt-2">{inp.name}</label>
-                        <input
-                          id={'parameter_treasury_' + index}
-                          className="mt-2 ml-2 px-2 border-2 border-gray-600 rounded-lg w-full"
-                          placeholder={inp.type}
-                        ></input>
-                      </div>
-                    ))}
-                </div>
-              </div>
-
-              <div className={`${selectedContract == netSettings.contracts.governanceDAO.contractAddress ? '' : 'hidden'}`}>
-                <label htmlFor="function_choise" className="text-sm px-2">
-                  Select function to interact
-                </label>
-                <select
-                  id="function_choise"
-                  className="px-1 mb-2 border-2 border-gray-600 rounded-lg w-full bg-gray-300/50"
-                  onChange={e => setSelectedFunction(e.target.value)}
-                  value={selectedFunction}
-                >
-                  {contractGovernanceDAO.abi
-                    .filter(func => func.type == 'function' && func.stateMutability != 'view' && func.stateMutability != 'pure')
-                    .map((fun, index) => (
-                      <option key={index} value={JSON.stringify(fun)}>
-                        {fun.name}
-                      </option>
-                    ))}
-                </select>
-                <label htmlFor="params" className="text-sm px-2">
-                  Parameters
-                </label>
-                <div id="params" className="px-2 pb-2 border border-gray-400/50 rounded-lg">
-                  {selectedFunction &&
-                    JSON.parse(selectedFunction).inputs.map((inp, index) => (
-                      <div className="flex place-items-center">
-                        <label className="mt-2">{inp.name}</label>
-                        <input
-                          id={'parameter_dao_' + index}
-                          className="mt-2 ml-2 px-2 border-2 border-gray-600 rounded-lg w-full"
-                          placeholder={inp.type}
-                        ></input>
-                      </div>
-                    ))}
-                </div>
-              </div>
-            </div>
-            <div className="w-full mt-2">
-              <label htmlFor="comment" className="text-sm px-2">
-                Comment
-              </label>
-              <input id="comment" className="px-2 py-1 border-2 border-gray-600 rounded-lg w-full" placeholder="Leave a detailed comment"></input>
-            </div>
-            <button
-              className="mt-2 w-1/2 md:w-1/4 place-self-center bg-gray-500/90 shadow-inner hover:shadow-gray-300/70 py-1 px-2 rounded-lg text-base text-white tracking-wide"
-              onClick={() => handleCreateVoting()}
-            >
-              Create voting
-            </button>
-          </div> */}
-          {/* перписать!!! */}
         </div>
         <div className="pt-1">
           {proposalsList
@@ -1143,7 +1039,6 @@ export default function DAO() {
                       ></img>
                     </div>
                     <div className="w-full col-start-2 col-span-3 text-sm font-bold">
-                      {/* <div>{user[1].index}</div> */}
                       <div>{user[1].nickname.length > 14 ? user[1].nickname.slice(0, 12) + '...' : user[1].nickname}</div>
                       <div
                         className="cursor-copy"

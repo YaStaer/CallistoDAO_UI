@@ -1,9 +1,7 @@
-import { Wallet } from 'ethers'
 import { netSettings } from '../dapp.config'
 import { BN } from 'bn.js'
 import Identicon from 'identicon.js'
 
-const Contract = require('web3-eth-contract')
 export const Web3 = require('web3')
 export const web3 = new Web3(netSettings.rpc)
 export const contractGovernanceDAO = require('../artifacts/contracts/GovernanceDAO.sol/GovernanceDAO.json')
@@ -15,15 +13,10 @@ const gas_percent = 120
 
 export const cards = 5
 
-// ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ
-
 export function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms))
 }
 
-// для страницы информаци
-
-// конвертация из 'wei' в 'ether' с учетом количества десятичных знаков токена
 export function toEther(x, n) {
   if (x) {
     const base = new BN(10).pow(new BN(n))
@@ -39,17 +32,6 @@ export function toEther(x, n) {
   }
 }
 
-//конвертация из 'ether' в 'wei' с учетом количества десятичных знаков токена
-export function fromEther(x, n) {
-  if (x) {
-    const base = new BN(10).pow(new BN(n))
-    const base18 = new BN(10).pow(new BN(18))
-    const result = Web3.utils.toBN(Web3.utils.toWei(x, 'ether')).mul(base).div(base18)
-    return result.toString(10)
-  }
-}
-
-// перевод timestamp в человеческий вид
 export function humanDate(UNIX_timestamp) {
   var a = new Date(UNIX_timestamp * 1000)
   var months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
