@@ -110,6 +110,23 @@ export const parseData = (data, abi) => {
   return result
 }
 
+export const parseABI = (abi) => {
+  const result = {
+    abi: '',
+    error: ''
+  }
+   try {
+      result.abi = JSON.parse(abi.replace(/\s/g, ''))
+      // console.log(abi)
+    } catch (err) {
+      return {
+        abi: '',
+        error: 'Incorrect ABI'
+      }
+    }
+  return result
+}
+
 export const parseSource = data => {
   const result = { MethodID: data.slice(0, 10) }
   for (const i = 0; i * 64 < data.slice(10).length; i++) {
@@ -290,8 +307,13 @@ export const vote = async (wallet, id, answer) => {
     while (true) {
       const receipt = await web3.eth.getTransactionReceipt(txHash)
       if (receipt) {
-        await sleep(1000)
-        return `Vote ${answer ? 'Up' : 'Down'} successfull`
+        if (receipt.status) {
+          await sleep(1000)
+          return `Vote ${answer ? 'Up' : 'Down'} successfull`
+        } else {
+          await sleep(1000)
+          return `Transaction failed`
+        }
       }
       console.log('Waiting a mined block to include your tx... currently in block ' + (await web3.eth.getBlockNumber()))
       await sleep(1000)
@@ -321,8 +343,13 @@ export const complete = async (wallet, id) => {
     while (true) {
       const receipt = await web3.eth.getTransactionReceipt(txHash)
       if (receipt) {
-        await sleep(1000)
-        return `Voting completed`
+        if (receipt.status) {
+          await sleep(1000)
+          return `Voting completed`
+        } else {
+          await sleep(1000)
+          return `Transaction failed`
+        }
       }
       console.log('Waiting a mined block to include your tx... currently in block ' + (await web3.eth.getBlockNumber()))
       await sleep(1000)
@@ -352,8 +379,13 @@ export const execute = async (wallet, id) => {
     while (true) {
       const receipt = await web3.eth.getTransactionReceipt(txHash)
       if (receipt) {
-        await sleep(1000)
-        return `Execute successfull`
+        if (receipt.status) {
+          await sleep(1000)
+          return `Execute successfull`
+        } else {
+          await sleep(1000)
+          return `Transaction failed`
+        }
       }
       console.log('Waiting a mined block to include your tx... currently in block ' + (await web3.eth.getBlockNumber()))
       await sleep(1000)
@@ -383,13 +415,74 @@ export const claim = async (wallet, id) => {
     while (true) {
       const receipt = await web3.eth.getTransactionReceipt(txHash)
       if (receipt) {
-        await sleep(1000)
-        return `Claim successfull`
+        if (receipt.status) {
+          await sleep(1000)
+          return `Claim successfull`
+        } else {
+          await sleep(1000)
+          return `Transaction failed`
+        }
       }
       console.log('Waiting a mined block to include your tx... currently in block ' + (await web3.eth.getBlockNumber()))
       await sleep(1000)
     }
   } catch (err) {
     return err.toString()
+  }
+}
+
+export const createVoting = async (wallet, isMember, contract, data, func, params, comment) => {
+  const address = wallet['accounts'][0]['address']
+  const contract_address = ''
+  const data_all = ''
+  try {
+    contract_address = Web3.utils.toChecksumAddress(contract)
+  } catch (err) {
+    return `Wrong address format`
+  }
+  if (!data) {
+    try {
+      data = web3.eth.abi.encodeFunctionCall(JSON.parse(func), params)
+    } catch (err) {
+      return `Wrong function parameters`
+    }
+  } else {
+    if (!Web3.utils.isHex(data)) {
+      return `Wrong data`
+    }
+  }
+
+  const tx = {
+    to: netSettings.contracts.governanceDAO.contractAddress,
+    from: address,
+    value: isMember ? Web3.utils.toHex(await GovernanceDAOcontract.methods.min_payment_DAO().call()) : Web3.utils.toHex(await GovernanceDAOcontract.methods.min_payment_other().call()),
+    data: GovernanceDAOcontract.methods.createProposal(contract_address, data, comment).encodeABI()
+  }
+  try {
+    const gas = await web3.eth.estimateGas(tx)
+    tx.gas = '0x' + new BN(gas).mul(new BN(gas_percent)).div(new BN(100)).toString(16)
+    console.log(tx)
+    const txHash = await wallet.provider.request({
+      method: 'eth_sendTransaction',
+      params: [tx]
+    })
+    console.log(`Send - ${txHash}`)
+    while (true) {
+      const receipt = await web3.eth.getTransactionReceipt(txHash)
+      if (receipt) {
+        if (receipt.status) {
+          await sleep(1000)
+          document.getElementById('comment').value = ''
+          return `Create voting successfull`
+        } else {
+          await sleep(1000)
+          return `Transaction failed`
+        }
+      }
+      console.log('Waiting a mined block to include your tx... currently in block ' + (await web3.eth.getBlockNumber()))
+      await sleep(1000)
+    }
+  } catch (err) {
+    return `Transaction canceled`
   }
 }

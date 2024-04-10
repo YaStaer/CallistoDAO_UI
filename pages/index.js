@@ -8,11 +8,11 @@ import { initOnboard } from '../utils/onboard'
 import { useConnectWallet, useSetChain, useWallets } from '@web3-onboard/react'
 import {
   cards,
-  checkClaim,
   claim,
   complete,
   contractGovernanceDAO,
   contractTreasury,
+  createVoting,
   execute,
   getAvatar,
   getClaimList,
@@ -27,11 +27,13 @@ import {
   getUserDAO,
   getUsersList,
   humanDate,
+  parseABI,
   parseComment,
   parseData,
   parseSource,
   vote,
-  Web3
+  Web3,
+  web3
 } from '../utils/interact'
 import StatusModal from '../utils/statusModal'
 import Modal from '../utils/modal'
@@ -65,7 +67,10 @@ export default function DAO() {
   const [balancesTrackedTokensDAO, setBalancesTrackedTokensDAO] = useState({})
   const [knownContracts, setKnownContracts] = useState({})
 
-  const [selectedContract, setSelectedContract] = useState(netSettings.contracts.treasury.contractAddress)
+  const [selectedContract, setSelectedContract] = useState('')
+  const [selectedFunction, setSelectedFunction] = useState('')
+  // const [pastedData, setPastedData] = useState('')
+  const [pastedABI, setPastedABI] = useState('')
 
   const [status, setStatus] = useState('')
   const [statusModalActive, setStatusModalActive] = useState(false)
@@ -116,6 +121,11 @@ export default function DAO() {
       setKnownContracts(JSON.parse(window.localStorage.getItem('knownContracts')))
       setBalanceDAO(await getTreasuryBalanceDAO())
       setTrackedTokensDAO(JSON.parse(window.localStorage.getItem('trackedTokens')))
+      setSelectedContract(netSettings.contracts.treasury.contractAddress)
+      setSelectedFunction(
+        JSON.stringify(contractTreasury.abi.filter(func => func.type == 'function' && func.stateMutability != 'view' && func.stateMutability != 'pure')[0])
+      )
+      setPastedABI(contractTreasury.abi)
     }
     init()
   }, [])
@@ -146,12 +156,50 @@ export default function DAO() {
   }, [proposalID])
 
   useEffect(() => {
+    const change_function = async () => {
+      for (const par of document.querySelectorAll('input[id*="parameter_"')) {
+        par.value = ''
+      }
+      document.getElementById('comment')?.value = ''
+    }
+    change_function()
+  }, [selectedFunction])
+
+  useEffect(() => {
+    const change_abi = async () => {
+      if (pastedABI) {
+        setSelectedFunction(
+          JSON.stringify(pastedABI.filter(func => func.type == 'function' && func.stateMutability != 'view' && func.stateMutability != 'pure')[0])
+        )
+      }
+    }
+    change_abi()
+  }, [pastedABI])
+
+  useEffect(() => {
+    const change_contract = async () => {
+      if (selectedContract == netSettings.contracts.treasury.contractAddress) {
+        setPastedABI(contractTreasury.abi)
+        document.getElementById('other_contract')?.value = ''
+      }
+      if (selectedContract == netSettings.contracts.governanceDAO.contractAddress) {
+        setPastedABI(contractGovernanceDAO.abi)
+        document.getElementById('other_contract')?.value = ''
+      }
+      document.getElementById('comment')?.value = ''
+    }
+    change_contract()
+  }, [selectedContract])
+
+  useEffect(() => {
     const getBalances = async () => {
       if (balancesModalActive && trackedTokensDAO) {
+        const balances = {}
         for (const [key, value] of Object.entries(trackedTokensDAO)) {
           const balance = await getTreasuryTokenBalanceDAO(key)
-          balancesTrackedTokensDAO[key] = balance.balance
+          balances[key] = balance.balance
         }
+        setBalancesTrackedTokensDAO(balances)
       }
     }
     getBalances()
@@ -171,6 +219,15 @@ export default function DAO() {
   }, [settingsModalActive])
 
   useEffect(() => {
+    const getSettings = async () => {
+      if (usersModalActive) {
+        setUsersList(await getUsersList())
+      }
+    }
+    getSettings()
+  }, [usersModalActive])
+
+  useEffect(() => {
     const set_status = async () => {
       if (status) {
         setStatusModalActive(true)
@@ -178,6 +235,7 @@ export default function DAO() {
         setTimeout(() => setStatus(''), 2400)
 
         setBalanceDAO(await getTreasuryBalanceDAO())
+        setUsersList(await getUsersList())
 
         if (totalVoting == proposalID) {
           // Если на первой странице
@@ -236,6 +294,19 @@ export default function DAO() {
     setKnownContracts(JSON.parse(window.localStorage.getItem('knownContracts')))
   }
 
+  const handleAddABI = abi => {
+    const added_abi = parseABI(abi)
+    if (added_abi.abi) {
+      setPastedABI(added_abi.abi)
+      setStatus('ABI added')
+      document.getElementById('data_field')?.value = ''
+      document.getElementById('abi_field')?.value = ''
+    } else {
+      setStatus(added_abi.error)
+      document.getElementById('abi_field')?.value = ''
+    }
+  }
+
   const handleSetTokenAddress = async addr => {
     const trackedTokens = JSON.parse(window.localStorage.getItem('trackedTokens'))
     if (!trackedTokens) {
@@ -254,7 +325,7 @@ export default function DAO() {
       setStatus(balance.error)
     }
     setTrackedTokensDAO(trackedTokens)
-    document.getElementById('input_token_addr').value = ''
+    document.getElementById('input_token_addr')?.value = ''
   }
 
   const handleDeleteTokenAddress = addr => {
@@ -283,6 +354,31 @@ export default function DAO() {
 
   const handleClaim = async (wallet, id) => {
     setStatus(await claim(wallet, id))
+  }
+
+  const handleCreateVoting = async () => {
+    const parameters = []
+    if (pastedABI) {
+      for (const par of document.querySelectorAll('input[id*="parameter_"')) {
+        console.log(par)
+        parameters.push(par.value)
+      }
+    }
+    // console.log(selectedFunction)
+    // console.log(parameters)
+
+    // console.log(web3.eth.abi.encodeFunctionCall(JSON.parse(selectedFunction), parameters))
+    setStatus(
+      await createVoting(
+        wallet,
+        userDao,
+        selectedContract,
+        document.getElementById('data_field')?.value,
+        selectedFunction,
+        parameters,
+        document.getElementById('comment')?.value
+      )
+    )
   }
 
   return (
@@ -364,13 +460,13 @@ export default function DAO() {
               className="col-start-1 flex place-items-center justify-self-start fill-gray-700/90 hover:fill-gray-900/90 text-gray-700/90 hover:text-gray-900/90 transition-all"
               onClick={() => (statusCreateBlock ? setStatusCreateBlock(false) : setStatusCreateBlock(true))}
               data-tooltip-id="tooltip"
-              data-tooltip-content="Create voting"
+              data-tooltip-content="Create proposal"
               data-tooltip-delay-show={500}
             >
               <svg height="32" viewBox="0 0 24 24" width="32" xmlns="http://www.w3.org/2000/svg" className="m-2">
                 <path d="m14.414 0h-9.414a3 3 0 0 0 -3 3v21h20v-16.414zm.586 3.414 3.586 3.586h-3.586zm-11 18.586v-19a1 1 0 0 1 1-1h8v7h7v13zm9-8h3v2h-3v3h-2v-3h-3v-2h3v-3h2z" />
               </svg>
-              <div className="font-bold hidden md:block">New{'\u00A0'}voting</div>
+              <div className="font-bold hidden md:block">New{'\u00A0'}proposal</div>
             </button>
           </div>
           <div className="col-start-2 md:col-start-4 flex place-items-center justify-self-end">
@@ -426,49 +522,221 @@ export default function DAO() {
             statusCreateBlock ? 'scale-y-100 max-h-screen p-2' : 'scale-y-0 max-h-0 p-0'
           } grid justify-items-center border-2 rounded-lg border-gray-700/90 mx-2 bg-gray-50 origin-top transition-all`}
         >
-          <div className="text-xl font-bold">New Voting</div>
-          <div className="grid justify-items-start w-full md:w-1/2 text-sm md:text-base">
-            <label htmlFor="contract_choise" className="text-sm px-2">
-              Select contract to interact
-            </label>
-            <select
-              id="contract_choise"
-              className="px-1 border-2 border-gray-600 rounded-lg w-full bg-gray-300/50"
-              onChange={e => setSelectedContract(e.target.value)}
+          {wallet ? (
+            <div className="w-full grid place-items-center">
+              <div className="text-xl font-bold">New proposal {userDao ? minPaymentDAO : minPaymentOther} CLO</div>
+              <div className="grid justify-items-start w-full md:w-1/2 text-sm md:text-base">
+                <div className="w-full">
+                  <label htmlFor="contract_choise" className="text-sm px-2">
+                    Select contract to interact
+                  </label>
+                  <select
+                    id="contract_choise"
+                    className="px-1 py-1 border-2 border-gray-600 rounded-lg w-full bg-gray-300/50"
+                    onChange={e => (
+                      setSelectedContract(e.target.value),
+                      setPastedABI(
+                        e.target.value == netSettings.contracts.treasury.contractAddress
+                          ? contractTreasury.abi
+                          : e.target.value == netSettings.contracts.governanceDAO.contractAddress
+                          ? contractGovernanceDAO.abi
+                          : ''
+                      )
+                    )}
+                    value={
+                      selectedContract == netSettings.contracts.treasury.contractAddress ||
+                      selectedContract == netSettings.contracts.governanceDAO.contractAddress
+                        ? selectedContract
+                        : ''
+                    }
+                  >
+                    <option value={netSettings.contracts.treasury.contractAddress}>Treasury</option>
+                    <option value={netSettings.contracts.governanceDAO.contractAddress}>GovernanceDAO</option>
+                    <option value="">Other...</option>
+                  </select>
+                </div>
+                <input
+                  id="other_contract"
+                  type="text"
+                  className={`${
+                    selectedContract == netSettings.contracts.treasury.contractAddress ||
+                    selectedContract == netSettings.contracts.governanceDAO.contractAddress
+                      ? 'hidden'
+                      : ''
+                  } mt-2 px-2 py-1 border-2 border-gray-600 rounded-lg w-full`}
+                  placeholder="Paste contract address here"
+                  onChange={e => setSelectedContract(e.target.value)}
+                ></input>
+                {/* новые поля */}
+                <div className="mt-2 w-full">
+                  <div className={`${pastedABI ? 'hidden' : ''} w-full`}>
+                    <div className="p-2 border border-gray-400/50 rounded-lg">
+                      <div className="text-sm px-2 pb-2">Add call data</div>
+                      <input id="data_field" type="text" className="px-2 py-1 border-2 border-gray-600 rounded-lg w-full" placeholder="Paste data here"></input>
+                      <div className="text-sm p-2">or add contract ABI</div>
+                      <div className="flex">
+                        <input id="abi_field" type="text" className="px-2 py-1 border-2 border-gray-600 rounded-lg w-full" placeholder="Paste ABI here"></input>
+                        <button
+                          className="ml-2 w-1/2 md:w-1/4 place-self-center bg-gray-500/90 shadow-inner hover:shadow-gray-300/70  py-1.5 px-2 rounded-lg text-white tracking-wide"
+                          onClick={() => handleAddABI(document.getElementById('abi_field').value)}
+                        >
+                          Add ABI
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                  <div className={`${pastedABI ? '' : 'hidden'} w-full`}>
+                    <label htmlFor="function_choise" className="text-sm px-2">
+                      Select function to interact
+                    </label>
+                    <select
+                      id="function_choise"
+                      className="px-1 py-1 mb-2 border-2 border-gray-600 rounded-lg w-full bg-gray-300/50"
+                      onChange={e => setSelectedFunction(e.target.value)}
+                      value={selectedFunction}
+                    >
+                      {pastedABI
+                        ? pastedABI
+                            .filter(func => func.type == 'function' && func.stateMutability != 'view' && func.stateMutability != 'pure')
+                            .map((fun, index) => (
+                              <option key={index} value={JSON.stringify(fun)}>
+                                {fun.name}
+                              </option>
+                            ))
+                        : ''}
+                    </select>
+                    <label htmlFor="params" className="text-sm px-2">
+                      Parameters
+                    </label>
+                    <div id="params" className="px-2 pb-2 border border-gray-400/50 rounded-lg">
+                      {selectedFunction &&
+                        JSON.parse(selectedFunction).inputs.map((inp, index) => (
+                          <div key={'params_' + index} className="flex place-items-center">
+                            <label className="mt-2">{inp.name}</label>
+                            <input
+                              id={'parameter_' + index}
+                              type="text"
+                              className="mt-2 ml-2 px-2 py-1 border-2 border-gray-600 rounded-lg w-full"
+                              placeholder={inp.type}
+                            ></input>
+                          </div>
+                        ))}
+                    </div>
+                  </div>
+                  <div className="w-full mt-2">
+                    <label htmlFor="comment" className="text-sm px-2">
+                      Comment
+                    </label>
+                    <input
+                      id="comment"
+                      type="text"
+                      className="px-2 py-1 border-2 border-gray-600 rounded-lg w-full"
+                      placeholder="Leave a detailed comment"
+                    ></input>
+                  </div>
+                  <div className="grid w-full">
+                    <button
+                      className="mt-2 w-1/2 md:w-1/4 justify-self-center bg-gray-500/90 shadow-inner hover:shadow-gray-300/70 py-1.5 px-2 rounded-lg text-base text-white tracking-wide"
+                      onClick={() => handleCreateVoting()}
+                    >
+                      Create proposal
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="text-base md:text-xl font-bold">Please connect wallet to create new proposal</div>
+          )}
+
+          {/* переписать!!!! */}
+          {/* <div className="mt-2 w-full">
+              <div className={`${selectedContract == netSettings.contracts.treasury.contractAddress ? '' : 'hidden'}`}>
+                <label htmlFor="function_choise" className="text-sm px-2">
+                  Select function to interact
+                </label>
+                <select
+                  id="function_choise"
+                  className="px-1 mb-2 border-2 border-gray-600 rounded-lg w-full bg-gray-300/50"
+                  onChange={e => setSelectedFunction(e.target.value)}
+                  value={selectedFunction}
+                >
+                  {contractTreasury.abi
+                    .filter(func => func.type == 'function' && func.stateMutability != 'view' && func.stateMutability != 'pure')
+                    .map((fun, index) => (
+                      <option key={index} value={JSON.stringify(fun)}>
+                        {fun.name}
+                      </option>
+                    ))}
+                </select>
+                <label htmlFor="params" className="text-sm px-2">
+                  Parameters
+                </label>
+                <div id="params" className="px-2 pb-2 border border-gray-400/50 rounded-lg">
+                  {selectedFunction &&
+                    JSON.parse(selectedFunction).inputs.map((inp, index) => (
+                      <div className="flex place-items-center">
+                        <label className="mt-2">{inp.name}</label>
+                        <input
+                          id={'parameter_treasury_' + index}
+                          className="mt-2 ml-2 px-2 border-2 border-gray-600 rounded-lg w-full"
+                          placeholder={inp.type}
+                        ></input>
+                      </div>
+                    ))}
+                </div>
+              </div>
+
+              <div className={`${selectedContract == netSettings.contracts.governanceDAO.contractAddress ? '' : 'hidden'}`}>
+                <label htmlFor="function_choise" className="text-sm px-2">
+                  Select function to interact
+                </label>
+                <select
+                  id="function_choise"
+                  className="px-1 mb-2 border-2 border-gray-600 rounded-lg w-full bg-gray-300/50"
+                  onChange={e => setSelectedFunction(e.target.value)}
+                  value={selectedFunction}
+                >
+                  {contractGovernanceDAO.abi
+                    .filter(func => func.type == 'function' && func.stateMutability != 'view' && func.stateMutability != 'pure')
+                    .map((fun, index) => (
+                      <option key={index} value={JSON.stringify(fun)}>
+                        {fun.name}
+                      </option>
+                    ))}
+                </select>
+                <label htmlFor="params" className="text-sm px-2">
+                  Parameters
+                </label>
+                <div id="params" className="px-2 pb-2 border border-gray-400/50 rounded-lg">
+                  {selectedFunction &&
+                    JSON.parse(selectedFunction).inputs.map((inp, index) => (
+                      <div className="flex place-items-center">
+                        <label className="mt-2">{inp.name}</label>
+                        <input
+                          id={'parameter_dao_' + index}
+                          className="mt-2 ml-2 px-2 border-2 border-gray-600 rounded-lg w-full"
+                          placeholder={inp.type}
+                        ></input>
+                      </div>
+                    ))}
+                </div>
+              </div>
+            </div>
+            <div className="w-full mt-2">
+              <label htmlFor="comment" className="text-sm px-2">
+                Comment
+              </label>
+              <input id="comment" className="px-2 py-1 border-2 border-gray-600 rounded-lg w-full" placeholder="Leave a detailed comment"></input>
+            </div>
+            <button
+              className="mt-2 w-1/2 md:w-1/4 place-self-center bg-gray-500/90 shadow-inner hover:shadow-gray-300/70 py-1 px-2 rounded-lg text-base text-white tracking-wide"
+              onClick={() => handleCreateVoting()}
             >
-              <option value={netSettings.contracts.treasury.contractAddress}>Treasury</option>
-              <option value={netSettings.contracts.governanceDAO.contractAddress}>GovernanceDAO</option>
-              <option value="other">Other...</option>
-            </select>
-            <input
-              id="other_contract"
-              className={`${
-                selectedContract == netSettings.contracts.treasury.contractAddress || selectedContract == netSettings.contracts.governanceDAO.contractAddress
-                  ? 'hidden'
-                  : ''
-              } mt-2 px-2 border-2 border-gray-600 rounded-lg w-full`}
-              placeholder="Paste contact address here"
-              onChange={e => setSelectedContract(e.target.value)}
-            ></input>
-            <select className={`${
-                selectedContract == netSettings.contracts.treasury.contractAddress
-                  ? ''
-                  : 'hidden'
-              } mt-2 px-2 border-2 border-gray-600 rounded-lg w-full`}>
-                {contractTreasury.abi.filter((func) => func.type == 'function' && func.stateMutability != 'view').map((fun, index) => (
-                  <option>{fun.name}</option>
-                ))}
-            </select>
-            <select className={`${
-                selectedContract == netSettings.contracts.governanceDAO.contractAddress
-                  ? ''
-                  : 'hidden'
-              } mt-2 px-2 border-2 border-gray-600 rounded-lg w-full`}>
-                {contractGovernanceDAO.abi.filter((func) => func.type == 'function' && func.stateMutability != 'view').map((fun, index) => (
-                  <option>{fun.name}</option>
-                ))}
-            </select>
-          </div>
+              Create voting
+            </button>
+          </div> */}
+          {/* перписать!!! */}
         </div>
         <div className="pt-1">
           {proposalsList
@@ -877,7 +1145,12 @@ export default function DAO() {
                     <div className="w-full col-start-2 col-span-3 text-sm font-bold">
                       {/* <div>{user[1].index}</div> */}
                       <div>{user[1].nickname.length > 14 ? user[1].nickname.slice(0, 12) + '...' : user[1].nickname}</div>
-                      <div>{user[1].address.slice(0, 8) + '...' + user[1].address.slice(-6)}</div>
+                      <div
+                        className="cursor-copy"
+                        onClick={() => (navigator.clipboard.writeText(user[1].address), setStatus('User ' + user[1].nickname + ' address copied'))}
+                      >
+                        {user[1].address.slice(0, 8) + '...' + user[1].address.slice(-6)}
+                      </div>
                       <div className="flex">
                         <div>
                           {user[1].votes} / {totalVoting - Number(user[1].entered)}
@@ -956,11 +1229,11 @@ export default function DAO() {
                 <div className="font-bold">{balanceDAO[0]}%</div>
               </div>
               <div className="flex px-2">
-                <div>Total votings:{'\u00A0'}</div>
+                <div>Total proposals:{'\u00A0'}</div>
                 <div className="font-bold">{totalVoting}</div>
               </div>
               <div className="flex px-2">
-                <div>Completed votings:{'\u00A0'}</div>
+                <div>Completed proposals:{'\u00A0'}</div>
                 <div className="font-bold">{totalCloseVoting}</div>
               </div>
               <div className="flex px-2">
@@ -971,14 +1244,14 @@ export default function DAO() {
                 </div>
               </div>
               <div className="flex px-2">
-                <div>Create voting for DAO members:{'\u00A0'}</div>
+                <div>Create proposal for members:{'\u00A0'}</div>
                 <div className="font-bold">
                   {minPaymentDAO}
                   {'\u00A0'}CLO
                 </div>
               </div>
               <div className="flex px-2">
-                <div>Create voting not for DAO members:{'\u00A0'}</div>
+                <div>Create proposal not for members:{'\u00A0'}</div>
                 <div className="font-bold">
                   {minPaymentOther}
                   {'\u00A0'}CLO
