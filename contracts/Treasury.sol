@@ -19,7 +19,7 @@ contract Treasury {
     }
 
     address public callistoNetwork = 0xeBE894814554c8382EA6a24CcDdf1527407A24f6; // Первый получатель
-    address public callistoCommunity = 0xfc8f3324B6D71d14BfD625ECdbD18f3bc29A9935; // Второй получатель
+    address public callistoCommunity = 0x810059e1406dEDAFd1BdCa4E0137CbA306c0Ce36; // Второй получатель
 
     mapping(address => RecipientData) private recipients; // связь получателей с их структурой данных
 

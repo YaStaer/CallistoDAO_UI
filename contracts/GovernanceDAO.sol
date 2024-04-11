@@ -149,7 +149,7 @@ contract GovernanceDAO {
 
 
         uint _amount_votes = proposals[_id].vocesYes.length + proposals[_id].vocesNo.length; // количество проголосовавших
-        if(_amount_votes == total_user){ // если все участники DAO проголосовали, то голосование досрочно завершаем
+        if(_amount_votes >= total_user){ // если все участники DAO проголосовали, то голосование досрочно завершаем
             proposals[_id].status = 2; // голосование завершено
             ++total_close_voting; // увеличиваем количество завершенных голосований
             emit ChangeStatus(_id, 2); // ID предложения, новый статус
