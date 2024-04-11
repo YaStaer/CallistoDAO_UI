@@ -69,7 +69,6 @@ export const parseData = (data, abi) => {
   if (typeof abi == 'string') {
     try {
       abi = JSON.parse(abi.replace(/\s/g, ''))
-      // console.log(abi)
     } catch (err) {
       return {
         function: '',
@@ -81,7 +80,6 @@ export const parseData = (data, abi) => {
   for (const i = 0; i < abi.length; i++) {
     if (abi[i].type == 'function' && web3.eth.abi.encodeFunctionSignature(abi[i]) == data.slice(0, 10)) {
       result.function = abi[i].name
-      // console.log(abi[i].name)
       const decode_params = web3.eth.abi.decodeParameters(abi[i].inputs, '0x' + data.slice(10))
       for (const p = 0; p < abi[i].inputs.length; p++) {
         result.params[abi[i].inputs[p].name] = decode_params[p]
@@ -92,20 +90,19 @@ export const parseData = (data, abi) => {
   return result
 }
 
-export const parseABI = (abi) => {
+export const parseABI = abi => {
   const result = {
     abi: '',
     error: ''
   }
-   try {
-      result.abi = JSON.parse(abi.replace(/\s/g, ''))
-      // console.log(abi)
-    } catch (err) {
-      return {
-        abi: '',
-        error: 'Incorrect ABI'
-      }
+  try {
+    result.abi = JSON.parse(abi.replace(/\s/g, ''))
+  } catch (err) {
+    return {
+      abi: '',
+      error: 'Incorrect ABI'
     }
+  }
   return result
 }
 
@@ -114,7 +111,6 @@ export const parseSource = data => {
   for (const i = 0; i * 64 < data.slice(10).length; i++) {
     result['[' + i + ']'] = data.slice(10 + i * 64, 74 + i * 64)
   }
-  // console.log(result)
   return result
 }
 
@@ -135,8 +131,6 @@ export const parseComment = comment => {
       arr[i] = temp[i]
     }
   }
-  // console.log(temp)
-  // console.log(arr)
   return 'Comment\u00A0-\u00A0' + arr.join('\u00A0')
 }
 
@@ -165,7 +159,6 @@ export const getTreasuryTokenBalanceDAO = async addr => {
       balance.error = 'Incorrect token address'
     }
   }
-  console.log(balance)
   return balance
 }
 
@@ -180,7 +173,6 @@ export const getUsersList = async () => {
   const users = {}
   while (true) {
     const resp = await GovernanceDAOcontract.methods.getUsersList(userID, count).call()
-    // console.log(resp)
     const id = 0
     while (resp[id] && Number(resp[id][0])) {
       users[resp[id][3].toString()] = {
@@ -190,13 +182,7 @@ export const getUsersList = async () => {
         address: resp[id][3],
         nickname: resp[id][4]
       }
-      // users[resp[id][4]] = {
-      //   index: resp[id][0],
-      //   votes: resp[id][1],
-      //   entered: resp[id][2],
-      //   address: resp[id][3],
-      //   nickname: resp[id][4]
-      // }
+
       id++
     }
     if (!Number(resp[resp.length - 1][0])) {
@@ -205,7 +191,6 @@ export const getUsersList = async () => {
       userID += count
     }
   }
-  // console.log(users)
   return users
 }
 
@@ -221,22 +206,23 @@ export const getTotalCloseVoting = async () => {
 
 export const getExpirePeriod = async () => {
   const resp = await GovernanceDAOcontract.methods.expire_period().call()
-  const period = resp / 86400
-  console.log(period)
+  const days = Math.floor(resp / 86400)
+  const hours = Math.floor((resp % 86400) / 3600)
+  const minutes = Math.floor(((resp % 86400) % 3600) / 60)
+  const seconds = Math.floor(((resp % 86400) % 3600) % 60)
+  const period = [days, hours, minutes, seconds]
   return period
 }
 
 export const getMinPaymentDAO = async () => {
   const resp = await GovernanceDAOcontract.methods.min_payment_DAO().call()
   const payment = Web3.utils.fromWei(resp, 'ether')
-  console.log(payment)
   return payment
 }
 
 export const getMinPaymentOther = async () => {
   const resp = await GovernanceDAOcontract.methods.min_payment_other().call()
   const payment = Web3.utils.fromWei(resp, 'ether')
-  console.log(payment)
   return payment
 }
 
@@ -248,7 +234,9 @@ export const getProposalsList = async id => {
       proposals.push(resp[i])
     }
   }
-  console.log(proposals)
+  if (!proposals.length) {
+    proposals = null
+  }
   return proposals
 }
 export const getClaimList = async (wallet, id) => {
@@ -259,14 +247,7 @@ export const getClaimList = async (wallet, id) => {
       claims[resp[0][i]] = resp[1][i]
     }
   }
-  console.log(claims)
   return claims
-}
-
-export const checkClaim = async (id, address) => {
-  const check = await GovernanceDAOcontract.methods.checkClaim(id, address).call()
-  console.log(check)
-  return check
 }
 
 export const vote = async (wallet, id, answer) => {
@@ -280,7 +261,6 @@ export const vote = async (wallet, id, answer) => {
   try {
     const gas = await web3.eth.estimateGas(tx)
     tx.gas = '0x' + new BN(gas).mul(new BN(gas_percent)).div(new BN(100)).toString(16)
-    console.log(tx)
     const txHash = await wallet.provider.request({
       method: 'eth_sendTransaction',
       params: [tx]
@@ -301,7 +281,7 @@ export const vote = async (wallet, id, answer) => {
       await sleep(1000)
     }
   } catch (err) {
-    return err.toString()
+    return err.message ? err.message : err.toString()
   }
 }
 
@@ -316,7 +296,6 @@ export const complete = async (wallet, id) => {
   try {
     const gas = await web3.eth.estimateGas(tx)
     tx.gas = '0x' + new BN(gas).mul(new BN(gas_percent)).div(new BN(100)).toString(16)
-    console.log(tx)
     const txHash = await wallet.provider.request({
       method: 'eth_sendTransaction',
       params: [tx]
@@ -337,7 +316,7 @@ export const complete = async (wallet, id) => {
       await sleep(1000)
     }
   } catch (err) {
-    return err.toString()
+    return err.message ? err.message : err.toString()
   }
 }
 
@@ -352,7 +331,6 @@ export const execute = async (wallet, id) => {
   try {
     const gas = await web3.eth.estimateGas(tx)
     tx.gas = '0x' + new BN(gas).mul(new BN(gas_percent)).div(new BN(100)).toString(16)
-    console.log(tx)
     const txHash = await wallet.provider.request({
       method: 'eth_sendTransaction',
       params: [tx]
@@ -373,7 +351,7 @@ export const execute = async (wallet, id) => {
       await sleep(1000)
     }
   } catch (err) {
-    return err.toString()
+    return err.message ? err.message : err.toString()
   }
 }
 
@@ -388,7 +366,6 @@ export const claim = async (wallet, id) => {
   try {
     const gas = await web3.eth.estimateGas(tx)
     tx.gas = '0x' + new BN(gas).mul(new BN(gas_percent)).div(new BN(100)).toString(16)
-    console.log(tx)
     const txHash = await wallet.provider.request({
       method: 'eth_sendTransaction',
       params: [tx]
@@ -409,7 +386,7 @@ export const claim = async (wallet, id) => {
       await sleep(1000)
     }
   } catch (err) {
-    return err.toString()
+    return err.message ? err.message : err.toString()
   }
 }
 
@@ -437,13 +414,14 @@ export const createVoting = async (wallet, isMember, contract, data, func, param
   const tx = {
     to: netSettings.contracts.governanceDAO.contractAddress,
     from: address,
-    value: isMember ? Web3.utils.toHex(await GovernanceDAOcontract.methods.min_payment_DAO().call()) : Web3.utils.toHex(await GovernanceDAOcontract.methods.min_payment_other().call()),
+    value: isMember
+      ? Web3.utils.toHex(await GovernanceDAOcontract.methods.min_payment_DAO().call())
+      : Web3.utils.toHex(await GovernanceDAOcontract.methods.min_payment_other().call()),
     data: GovernanceDAOcontract.methods.createProposal(contract_address, data, comment).encodeABI()
   }
   try {
     const gas = await web3.eth.estimateGas(tx)
     tx.gas = '0x' + new BN(gas).mul(new BN(gas_percent)).div(new BN(100)).toString(16)
-    console.log(tx)
     const txHash = await wallet.provider.request({
       method: 'eth_sendTransaction',
       params: [tx]

@@ -51,7 +51,7 @@ export default function DAO() {
   const [claimsList, setClaimsList] = useState(null)
   const [totalVoting, setTotalVoting] = useState(null)
   const [totalCloseVoting, setTotalCloseVoting] = useState(null)
-  const [expirePeriod, setExpirePeriod] = useState(null)
+  const [expirePeriod, setExpirePeriod] = useState([])
   const [minPaymentDAO, setMinPaymentDAO] = useState(null)
   const [minPaymentOther, setMinPaymentOther] = useState(null)
   const [proposalsList, setProposalsList] = useState(null)
@@ -154,7 +154,7 @@ export default function DAO() {
       for (const par of document.querySelectorAll('input[id*="parameter_"')) {
         par.value = ''
       }
-      document.getElementById('comment')?.value = ''
+      document.getElementById('comment') ? (document.getElementById('comment').value = '') : null
     }
     change_function()
   }, [selectedFunction])
@@ -174,13 +174,13 @@ export default function DAO() {
     const change_contract = async () => {
       if (selectedContract == netSettings.contracts.treasury.contractAddress) {
         setPastedABI(contractTreasury.abi)
-        document.getElementById('other_contract')?.value = ''
+        document.getElementById('other_contract') ? (document.getElementById('other_contract').value = '') : null
       }
       if (selectedContract == netSettings.contracts.governanceDAO.contractAddress) {
         setPastedABI(contractGovernanceDAO.abi)
-        document.getElementById('other_contract')?.value = ''
+        document.getElementById('other_contract') ? (document.getElementById('other_contract').value = '') : null
       }
-      document.getElementById('comment')?.value = ''
+      document.getElementById('comment') ? (document.getElementById('comment').value = '') : null
     }
     change_contract()
   }, [selectedContract])
@@ -202,6 +202,8 @@ export default function DAO() {
   useEffect(() => {
     const getSettings = async () => {
       if (settingsModalActive) {
+        setMinPaymentDAO(await getMinPaymentDAO())
+        setMinPaymentOther(await getMinPaymentOther())
         setExpirePeriod(await getExpirePeriod())
         setTotalCloseVoting(await getTotalCloseVoting())
         setTotalVoting(await getTotalVoting())
@@ -209,6 +211,16 @@ export default function DAO() {
     }
     getSettings()
   }, [settingsModalActive])
+
+  useEffect(() => {
+    const getSettings = async () => {
+      if (statusCreateBlock) {
+        setMinPaymentDAO(await getMinPaymentDAO())
+        setMinPaymentOther(await getMinPaymentOther())
+      }
+    }
+    getSettings()
+  }, [statusCreateBlock])
 
   useEffect(() => {
     const getSettings = async () => {
@@ -226,24 +238,30 @@ export default function DAO() {
         setTimeout(() => setStatusModalActive(false), 2000)
         setTimeout(() => setStatus(''), 2400)
 
-        setBalanceDAO(await getTreasuryBalanceDAO())
-        setUsersList(await getUsersList())
+        if (status.split(' ')[status.split(' ').length - 1] != 'copied') {
+          setBalanceDAO(await getTreasuryBalanceDAO())
+          setUsersList(await getUsersList())
 
-        if (totalVoting == proposalID) {
-          const votings = await getTotalVoting()
-          if (votings != totalVoting) {
-            setTimeout(async () => setTotalVoting(votings), 500)
-            setTimeout(async () => setProposalID(votings), 500)
+          if (wallet) {
+            setUserDao(await getUserDAO(wallet))
+          }
+
+          if (totalVoting == proposalID) {
+            const votings = await getTotalVoting()
+            if (votings != totalVoting) {
+              setTimeout(async () => setTotalVoting(votings), 500)
+              setTimeout(async () => setProposalID(votings), 500)
+            } else {
+              setTimeout(async () => setProposalsList(await getProposalsList(proposalID)), 500)
+              if (wallet) {
+                setTimeout(async () => setClaimsList(await getClaimList(wallet, proposalID)), 500)
+              }
+            }
           } else {
             setTimeout(async () => setProposalsList(await getProposalsList(proposalID)), 500)
             if (wallet) {
               setTimeout(async () => setClaimsList(await getClaimList(wallet, proposalID)), 500)
             }
-          }
-        } else {
-          setTimeout(async () => setProposalsList(await getProposalsList(proposalID)), 500)
-          if (wallet) {
-            setTimeout(async () => setClaimsList(await getClaimList(wallet, proposalID)), 500)
           }
         }
       } else {
@@ -289,11 +307,11 @@ export default function DAO() {
     if (added_abi.abi) {
       setPastedABI(added_abi.abi)
       setStatus('ABI added')
-      document.getElementById('data_field')?.value = ''
-      document.getElementById('abi_field')?.value = ''
+      document.getElementById('data_field') ? (document.getElementById('data_field').value = '') : null
+      document.getElementById('abi_field') ? (document.getElementById('abi_field').value = '') : null
     } else {
       setStatus(added_abi.error)
-      document.getElementById('abi_field')?.value = ''
+      document.getElementById('abi_field') ? (document.getElementById('abi_field').value = '') : null
     }
   }
 
@@ -315,7 +333,7 @@ export default function DAO() {
       setStatus(balance.error)
     }
     setTrackedTokensDAO(trackedTokens)
-    document.getElementById('input_token_addr')?.value = ''
+    document.getElementById('input_token_addr') ? (document.getElementById('input_token_addr').value = '') : null
   }
 
   const handleDeleteTokenAddress = addr => {
@@ -384,9 +402,11 @@ export default function DAO() {
                 ></img>
                 <div className="font-bold px-2 truncate">{userDao[4]}</div>
                 <div className="px-3 text-[12px] grid grid-cols-2">
-                  <div className="col-start-1">Total{'\u00A0'}votings</div>
+                  <div className="col-start-1" data-tooltip-id="tooltip" data-tooltip-content="Proposals available for voting" data-tooltip-delay-show={500}>
+                    Proposals
+                  </div>
                   <div className="ml-2 font-bold col-start-2">{totalVoting - Number(userDao[2])}</div>
-                  <div className="col-start-1">Participated</div>
+                  <div className="col-start-1" data-tooltip-id="tooltip" data-tooltip-content="Proposals voted on" data-tooltip-delay-show={500}>Participated</div>
                   <div className="ml-2 font-bold col-start-2">{userDao[1]}</div>
                 </div>
               </div>
@@ -412,7 +432,7 @@ export default function DAO() {
                 <div className="flex place-items-center">
                   <img src={`data:image/png;base64,${getAvatar(userDao[3])}`} className="my-1 border border-gray-400 float-left h-[32px] rounded-full"></img>
                   <div className="px-3 text-[12px] grid grid-cols-3">
-                    <div className="col-start-1 col-span-2">Total{'\u00A0'}votings</div>
+                    <div className="col-start-1 col-span-2">Proposals</div>
                     <div className="pl-2 font-bold col-start-3">{totalVoting - Number(userDao[2])}</div>
                     <div className="col-start-1 col-span-2">Participated</div>
                     <div className="pl-2 font-bold col-start-3">{userDao[1]}</div>
@@ -901,15 +921,15 @@ export default function DAO() {
           <div className="col-start-1 flex place-items-center place-self-end">
             <button
               className={`${
-                proposalsList && Number(proposalsList[0][0]) == totalVoting ? 'hidden' : ''
-              } flex place-items-center bg-gray-500/90 shadow-inner hover:shadow-gray-300/70 h-8 px-2 mr-4 rounded-md text-base text-white`}
+                !proposalsList || (proposalsList && Number(proposalsList[0][0]) == totalVoting) ? 'hidden' : ''
+              }  flex place-items-center bg-gray-500/90 shadow-inner hover:shadow-gray-300/70 h-8 px-2 mr-4 rounded-md text-base text-white`}
               onClick={() => setProposalID(totalVoting)}
             >
               <div>First</div>
             </button>
             <button
               className={`${
-                proposalsList && Number(proposalsList[0][0]) == totalVoting ? 'hidden' : ''
+                !proposalsList || (proposalsList && Number(proposalsList[0][0]) == totalVoting) ? 'hidden' : ''
               } col-start-1 flex place-items-center place-self-end bg-gray-500/90 shadow-inner hover:shadow-gray-300/70 h-8 px-2 rounded-md text-base text-white`}
               onClick={() => setProposalID(proposalID + cards)}
             >
@@ -920,7 +940,7 @@ export default function DAO() {
           </div>
           <button
             className={`${
-              proposalsList && proposalsList[proposalsList.length - 1][0] == 1 ? 'hidden' : ''
+              !proposalsList || (proposalsList && proposalsList[proposalsList.length - 1][0] == 1) ? 'hidden' : ''
             } col-start-2 flex place-items-center place-self-start bg-gray-500/90 shadow-inner hover:shadow-gray-300/70 h-8 px-2 rounded-md text-base text-white`}
             onClick={() => setProposalID(proposalID - cards)}
           >
@@ -1062,7 +1082,7 @@ export default function DAO() {
                               : 'text-red-700'
                           }`}
                         >
-                          {Math.round((Number(user[1].votes) / (totalVoting - Number(user[1].entered))) * 100)}%
+                          {totalVoting == Number(user[1].entered) ? 0 : Math.round((Number(user[1].votes) / (totalVoting - Number(user[1].entered))) * 100)}%
                         </div>
                         <div>)</div>
                       </div>
@@ -1133,9 +1153,21 @@ export default function DAO() {
               </div>
               <div className="flex px-2">
                 <div>Voting period:{'\u00A0'}</div>
-                <div className="font-bold">
-                  {expirePeriod}
-                  {'\u00A0'}days
+                <div className={`${expirePeriod[0] ? '' : 'hidden'} font-bold`}>
+                  {expirePeriod[0]}
+                  {'\u00A0'}days{'\u00A0'}
+                </div>
+                <div className={`${expirePeriod[1] ? '' : 'hidden'} font-bold`}>
+                  {expirePeriod[1]}
+                  {'\u00A0'}h{'\u00A0'}
+                </div>
+                <div className={`${expirePeriod[2] ? '' : 'hidden'} font-bold`}>
+                  {expirePeriod[2]}
+                  {'\u00A0'}min{'\u00A0'}
+                </div>
+                <div className={`${expirePeriod[3] ? '' : 'hidden'} font-bold`}>
+                  {expirePeriod[3]}
+                  {'\u00A0'}sec
                 </div>
               </div>
               <div className="flex px-2">
