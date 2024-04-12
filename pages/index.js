@@ -886,7 +886,7 @@ export default function DAO() {
                         </svg>
                       </button>
                     </div>
-                    <div className="ml-[4px] flex place-items-center">
+                    <div className="ml-[4px] flex flex-wrap place-items-center">
                       {prop[7].map((member, index) => (
                         <div key={'member_up_' + index} className="ml-[-8px] mt-2 flex">
                           <img
@@ -897,9 +897,9 @@ export default function DAO() {
                             data-tooltip-delay-show={500}
                           ></img>
                         </div>
-                      ))}
+                      ))}                      
                     </div>
-                    <div className="ml-[4px] flex place-items-center">
+                    <div className="ml-[4px] flex flex-wrap place-items-center">
                       {prop[8].map((member, index) => (
                         <div key={'member_down_' + index} className="ml-[-8px] mt-1 flex">
                           <img
@@ -950,7 +950,7 @@ export default function DAO() {
           </button>
         </div>
       </div>
-      <div className="bg-gray-400/70 h-[50px] w-full grid grid-cols-6 gap-2 place-items-center">
+      <div className="bg-gray-400/70 h-[50px] w-full grid grid-cols-2 md:grid-cols-6 gap-2 place-items-center">
         <div className="flex text-sm">
           <div>
             Callisto{'\u00A0'}DAO{'\u00A0'}
