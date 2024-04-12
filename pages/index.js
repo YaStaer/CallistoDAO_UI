@@ -453,7 +453,7 @@ export default function DAO() {
         )}
       </div>
       <div className="my-2 text-center text-gray-700/90 text-sm md:text-base">
-        Comunity{'\u00A0'}treasury{'\u00A0'}balance{' '}
+        Community{'\u00A0'}treasury{'\u00A0'}balance{' '}
         <b>
           {balanceDAO[1]}
           {'\u00A0'}CLO
@@ -805,12 +805,12 @@ export default function DAO() {
                       </button>
                     </div>
                   </div>
-                  <div className="col-start-1 col-span-3 md:col-start-3 md:col-span-1 place-self-center text-base">
-                    <div className="mt-2 md:mt-10 grid grid-cols-4 place-items-center">
+                  <div className="col-start-1 col-span-3 md:col-start-3 md:col-span-1 place-self-center text-base w-full">
+                    <div className="mt-2 md:mt-10 mx-1 grid grid-cols-10 gap-1 place-items-start">
                       <button
                         id={'vote_up_button_' + prop[0]}
                         disabled={wallet && userDao && claimsList && !claimsList[prop[0]] && Number(prop[5]) == 1 ? false : true}
-                        className={`col-start-1 col-span-1 mr-2 p-2 flex place-items-center border-2 border-green-600/90 fill-green-600/90 text-green-600/90 rounded-lg ${
+                        className={`col-start-1 col-span-3 p-2 w-full flex justify-center place-items-center border-2 border-green-600/90 fill-green-600/90 text-green-600/90 rounded-lg ${
                           wallet && userDao && claimsList && !claimsList[prop[0]] && Number(prop[5]) == 1
                             ? 'bg-gray-400/50 hover:fill-green-700/90 hover:text-green-700/90 hover:border-green-700/90 hover:bg-gray-400/20 transition-all'
                             : ''
@@ -823,12 +823,12 @@ export default function DAO() {
                         <svg xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 24 24" width="32" height="32">
                           <path d="M22.773,7.721A4.994,4.994,0,0,0,19,6H15.011l.336-2.041A3.037,3.037,0,0,0,9.626,2.122L7.712,6H5a5.006,5.006,0,0,0-5,5v5a5.006,5.006,0,0,0,5,5H18.3a5.024,5.024,0,0,0,4.951-4.3l.705-5A5,5,0,0,0,22.773,7.721ZM2,16V11A3,3,0,0,1,5,8H7V19H5A3,3,0,0,1,2,16Zm19.971-4.581-.706,5A3.012,3.012,0,0,1,18.3,19H9V7.734a1,1,0,0,0,.23-.292l2.189-4.435A1.07,1.07,0,0,1,13.141,2.8a1.024,1.024,0,0,1,.233.84l-.528,3.2A1,1,0,0,0,13.833,8H19a3,3,0,0,1,2.971,3.419Z" />
                         </svg>
-                        <div className="pl-2 text-[24px] font-bold">{prop[7].length}</div>
+                        <div className="pl-1 text-[20px] font-bold">{prop[7].length}</div>
                       </button>
                       <button
                         id={'vote_down_button_' + prop[0]}
                         disabled={wallet && userDao && claimsList && !claimsList[prop[0]] && Number(prop[5]) == 1 ? false : true}
-                        className={`col-start-2 col-span-1 mr-2 p-2 flex place-items-center border-2 border-red-600/90 fill-red-600/90 text-red-600/90 rounded-lg ${
+                        className={`col-start-4 col-span-3 p-2 w-full flex justify-center place-items-center border-2 border-red-600/90 fill-red-600/90 text-red-600/90 rounded-lg ${
                           wallet && userDao && claimsList && !claimsList[prop[0]] && Number(prop[5]) == 1
                             ? 'bg-gray-400/50 hover:border-red-700/90 hover:fill-red-700/90 hover:text-red-700/90 hover:bg-gray-400/20 transition-all'
                             : ''
@@ -841,13 +841,13 @@ export default function DAO() {
                         <svg xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 24 24" width="32" height="32">
                           <path d="M23.951,12.3l-.705-5A5.024,5.024,0,0,0,18.3,3H5A5.006,5.006,0,0,0,0,8v5a5.006,5.006,0,0,0,5,5H7.712l1.914,3.878a3.037,3.037,0,0,0,5.721-1.837L15.011,18H19a5,5,0,0,0,4.951-5.7ZM5,5H7V16H5a3,3,0,0,1-3-3V8A3,3,0,0,1,5,5Zm16.264,9.968A3,3,0,0,1,19,16H13.833a1,1,0,0,0-.987,1.162l.528,3.2a1.024,1.024,0,0,1-.233.84,1.07,1.07,0,0,1-1.722-.212L9.23,16.558A1,1,0,0,0,9,16.266V5h9.3a3.012,3.012,0,0,1,2.97,2.581l.706,5A3,3,0,0,1,21.264,14.968Z" />
                         </svg>
-                        <div className="pl-2 text-[24px] font-bold">{prop[8].length}</div>
+                        <div className="pl-1 text-[20px] font-bold">{prop[8].length}</div>
                       </button>
                       <button
                         id={'completion_button_' + prop[0]}
-                        className={`col-start-3 col-span-1 ml-4 p-2 ${
+                        className={`col-start-7 col-span-2 p-2 ${
                           wallet && Number(prop[5]) == 1 && Number(prop[3]) < Math.round(Date.now() / 1000) ? 'flex' : 'hidden'
-                        } place-items-center border-2 bg-gray-400/50 border-gray-700/90 fill-gray-700/90 rounded-lg hover:border-gray-900/90 hover:fill-gray-900/90 hover:bg-gray-400/20 transition-all`}
+                        } w-full justify-center place-items-center border-2 bg-gray-400/50 border-gray-700/90 fill-gray-700/90 rounded-lg hover:border-gray-900/90 hover:fill-gray-900/90 hover:bg-gray-400/20 transition-all`}
                         onClick={() => handleComplete(wallet, prop[0])}
                         data-tooltip-id="tooltip"
                         data-tooltip-content="Complete"
@@ -859,9 +859,9 @@ export default function DAO() {
                       </button>
                       <button
                         id={'execute_button_' + prop[0]}
-                        className={`col-start-3 col-span-1 ml-4 p-2 ${
+                        className={`col-start-7 col-span-2 p-2 ${
                           wallet && Number(prop[5]) == 2 ? 'flex' : 'hidden'
-                        } place-items-center border-2 bg-gray-400/50 border-gray-700/90 fill-gray-700/90 rounded-lg hover:border-gray-900/90 hover:fill-gray-900/90 hover:bg-gray-400/20 transition-all`}
+                        } w-full justify-center place-items-center border-2 bg-gray-400/50 border-gray-700/90 fill-gray-700/90 rounded-lg hover:border-gray-900/90 hover:fill-gray-900/90 hover:bg-gray-400/20 transition-all`}
                         onClick={() => handleExecute(wallet, prop[0])}
                         data-tooltip-id="tooltip"
                         data-tooltip-content="Execute"
@@ -873,9 +873,9 @@ export default function DAO() {
                       </button>
                       <button
                         id={'claim_button_' + prop[0]}
-                        className={`col-start-4 col-span-1 ml-2 p-2 ${
+                        className={`col-start-9 col-span-2 p-2 ${
                           wallet && claimsList && claimsList[prop[0]] && Number(prop[5]) > 1 ? 'flex' : 'hidden'
-                        }  place-items-center border-2 bg-gray-400/50 border-gray-700/90 fill-gray-700/90 rounded-lg hover:border-gray-900/90 hover:fill-gray-900/90 hover:bg-gray-400/20 transition-all`}
+                        }  w-full justify-center place-items-center border-2 bg-gray-400/50 border-gray-700/90 fill-gray-700/90 rounded-lg hover:border-gray-900/90 hover:fill-gray-900/90 hover:bg-gray-400/20 transition-all`}
                         onClick={() => handleClaim(wallet, prop[0])}
                         data-tooltip-id="tooltip"
                         data-tooltip-content="Claim"
