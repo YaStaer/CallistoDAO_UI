@@ -480,7 +480,7 @@ export default function DAO() {
               className="fill-gray-700/90 hover:fill-gray-900/90 transition-all"
               onClick={() => setBalancesModalActive(true)}
               data-tooltip-id="tooltip"
-              data-tooltip-content="Treasury balances"
+              data-tooltip-content="Treasury balance"
               data-tooltip-delay-show={500}
             >
               <svg height="32" viewBox="0 0 24 24" width="32" xmlns="http://www.w3.org/2000/svg" className="m-2">
@@ -534,7 +534,7 @@ export default function DAO() {
               <div className="grid justify-items-start w-full md:w-1/2 text-sm md:text-base">
                 <div className="w-full">
                   <label htmlFor="contract_choise" className="text-sm px-2">
-                    Select contract to interact
+                    Select a contract to interact
                   </label>
                   <select
                     id="contract_choise"
@@ -592,7 +592,7 @@ export default function DAO() {
                   </div>
                   <div className={`${pastedABI ? '' : 'hidden'} w-full`}>
                     <label htmlFor="function_choise" className="text-sm px-2">
-                      Select function to interact
+                      Select a function to interact
                     </label>
                     <select
                       id="function_choise"
@@ -686,8 +686,8 @@ export default function DAO() {
                     <div className="hidden md:block py-0.5">#{prop[0]}</div>
                   </div>
                   <div className="col-start-1 col-span-3 md:col-span-2">
-                    <div>Start voting - {humanDate(prop[1])}</div>
-                    <div>End voting - {humanDate(prop[3])}</div>
+                    <div>Voting start - {humanDate(prop[1])}</div>
+                    <div>Voting end - {humanDate(prop[3])}</div>
                     <div>Status - {statuses[prop[5]]}</div>
                     <div>Reward - {Web3.utils.fromWei(prop[2], 'ether')} CLO</div>
                     <div className="hidden md:flex" onClick={() => (navigator.clipboard.writeText(prop[4]), setStatus('Creator address copied'))}>
@@ -976,7 +976,7 @@ export default function DAO() {
             </svg>
           </button>
           <div className="text-center text-base md:text-xl font-bold pb-4">
-            Comunity{'\u00A0'}treasury{'\u00A0'}balances
+            Community{'\u00A0'}treasury{'\u00A0'}balance
           </div>
           <div className="overflow-y-auto max-h-[50vh] grid justify-items-center">
             <div className="grid justify-items-stretch">
@@ -1062,7 +1062,7 @@ export default function DAO() {
                       <div>{user[1].nickname.length > 14 ? user[1].nickname.slice(0, 12) + '...' : user[1].nickname}</div>
                       <div
                         className="cursor-copy"
-                        onClick={() => (navigator.clipboard.writeText(user[1].address), setStatus('User ' + user[1].nickname + ' address copied'))}
+                        onClick={() => (navigator.clipboard.writeText(user[1].address), setStatus(user[1].nickname + '\'s address copied'))}
                       >
                         {user[1].address.slice(0, 8) + '...' + user[1].address.slice(-6)}
                       </div>
