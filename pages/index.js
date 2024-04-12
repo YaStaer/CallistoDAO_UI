@@ -651,7 +651,7 @@ export default function DAO() {
               </div>
             </div>
           ) : (
-            <div className="text-base md:text-xl font-bold">Please connect wallet to create new proposal</div>
+            <div className="text-center text-base md:text-xl font-bold">Please connect wallet to create new proposal</div>
           )}
         </div>
         <div className="pt-1">
