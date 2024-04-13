@@ -806,7 +806,7 @@ export default function DAO() {
                     </div>
                   </div>
                   <div className="col-start-1 col-span-3 md:col-start-3 md:col-span-1 place-self-center text-base w-full">
-                    <div className="mt-2 md:mt-10 mx-1 grid grid-cols-10 gap-1 place-items-start">
+                    <div className="mt-2 md:mt-10 mx-1 grid grid-cols-10 gap-2 place-items-start">
                       <button
                         id={'vote_up_button_' + prop[0]}
                         disabled={wallet && userDao && claimsList && !claimsList[prop[0]] && Number(prop[5]) == 1 ? false : true}
