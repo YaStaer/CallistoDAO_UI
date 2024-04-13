@@ -169,7 +169,7 @@ export const getUserDAO = async wallet => {
 
 export const getUsersList = async () => {
   const userID = 1
-  const count = 10
+  const count = 100
   const users = {}
   while (true) {
     const resp = await GovernanceDAOcontract.methods.getUsersList(userID, count).call()
