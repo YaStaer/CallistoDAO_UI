@@ -6,6 +6,8 @@ export const Web3 = require('web3')
 export const web3 = new Web3(netSettings.rpc)
 export const contractGovernanceDAO = require('../artifacts/contracts/GovernanceDAO.sol/GovernanceDAO.json')
 const GovernanceDAOcontract = new web3.eth.Contract(contractGovernanceDAO.abi, netSettings.contracts.governanceDAO.contractAddress)
+export const contractWalletDAO = require('../artifacts/contracts/WalletDAO.sol/WalletDAO.json')
+const WalletDAOcontract = new web3.eth.Contract(contractWalletDAO.abi, netSettings.contracts.walletDAO.contractAddress)
 export const contractTreasury = require('../artifacts/contracts/Treasury.sol/Treasury.json')
 const TreasuryContract = new web3.eth.Contract(contractTreasury.abi, netSettings.contracts.treasury.contractAddress)
 
@@ -239,6 +241,7 @@ export const getProposalsList = async id => {
   }
   return proposals
 }
+
 export const getClaimList = async (wallet, id) => {
   const resp = await GovernanceDAOcontract.methods.getClaimList(await Web3.utils.toChecksumAddress(wallet['accounts'][0]['address']), id, cards).call()
   const claims = {}
@@ -248,6 +251,22 @@ export const getClaimList = async (wallet, id) => {
     }
   }
   return claims
+}
+
+export const getWalletDAOBalances = async () => {
+  const resp = await WalletDAOcontract.methods.walletDAO_ViewBalances().call()
+  const balances = []
+  for (const i = 0; i < resp.length; i++) {
+    balances.push({
+      address: resp[i][2],
+      balance: toEther(resp[i][0], resp[i][1]),
+      ticker: resp[i][3],
+      decimals: resp[i][1]
+    })
+  }
+  const native = balances.pop()
+  balances.unshift(native)
+  return balances
 }
 
 export const vote = async (wallet, id, answer) => {

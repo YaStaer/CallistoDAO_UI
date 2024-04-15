@@ -9,6 +9,7 @@ import {
   complete,
   contractGovernanceDAO,
   contractTreasury,
+  contractWalletDAO,
   createVoting,
   execute,
   getAvatar,
@@ -23,6 +24,7 @@ import {
   getTreasuryTokenBalanceDAO,
   getUserDAO,
   getUsersList,
+  getWalletDAOBalances,
   humanDate,
   parseABI,
   parseComment,
@@ -57,6 +59,7 @@ export default function DAO() {
   const [proposalsList, setProposalsList] = useState(null)
   const [proposalID, setProposalID] = useState(0)
   const [balanceDAO, setBalanceDAO] = useState([])
+  const [balancesWalletDAO, setBalancesWalletDAO] = useState([])
   const [trackedTokensDAO, setTrackedTokensDAO] = useState({})
   const [balancesTrackedTokensDAO, setBalancesTrackedTokensDAO] = useState({})
   const [knownContracts, setKnownContracts] = useState({})
@@ -73,6 +76,7 @@ export default function DAO() {
   const [settingsModalActive, setSettingsModalActive] = useState(false)
 
   const [statusCreateBlock, setStatusCreateBlock] = useState(false)
+  const [statusWalletDAO, setStatusWalletDAO] = useState(false)
 
   useEffect(() => {
     setOnboard(initOnboard)
@@ -114,6 +118,7 @@ export default function DAO() {
       setUsersList(await getUsersList())
       setKnownContracts(JSON.parse(window.localStorage.getItem('knownContracts')))
       setBalanceDAO(await getTreasuryBalanceDAO())
+      setBalancesWalletDAO(await getWalletDAOBalances())
       setTrackedTokensDAO(JSON.parse(window.localStorage.getItem('trackedTokens')))
       setSelectedContract(netSettings.contracts.treasury.contractAddress)
       setSelectedFunction(
@@ -180,6 +185,10 @@ export default function DAO() {
         setPastedABI(contractGovernanceDAO.abi)
         document.getElementById('other_contract') ? (document.getElementById('other_contract').value = '') : null
       }
+      if (selectedContract == netSettings.contracts.walletDAO.contractAddress) {
+        setPastedABI(contractWalletDAO.abi)
+        document.getElementById('other_contract') ? (document.getElementById('other_contract').value = '') : null
+      }
       document.getElementById('comment') ? (document.getElementById('comment').value = '') : null
     }
     change_contract()
@@ -193,7 +202,9 @@ export default function DAO() {
           const balance = await getTreasuryTokenBalanceDAO(key)
           balances[key] = balance.balance
         }
+        setBalanceDAO(await getTreasuryBalanceDAO())
         setBalancesTrackedTokensDAO(balances)
+        setBalancesWalletDAO(await getWalletDAOBalances())
       }
     }
     getBalances()
@@ -240,6 +251,7 @@ export default function DAO() {
 
         if (status.split(' ')[status.split(' ').length - 1] != 'copied') {
           setBalanceDAO(await getTreasuryBalanceDAO())
+          setBalancesWalletDAO(await getWalletDAOBalances())
           setUsersList(await getUsersList())
 
           if (wallet) {
@@ -406,7 +418,9 @@ export default function DAO() {
                     Proposals
                   </div>
                   <div className="ml-2 font-bold col-start-2">{totalVoting - Number(userDao[2])}</div>
-                  <div className="col-start-1" data-tooltip-id="tooltip" data-tooltip-content="Proposals voted on" data-tooltip-delay-show={500}>Participated</div>
+                  <div className="col-start-1" data-tooltip-id="tooltip" data-tooltip-content="Proposals voted on" data-tooltip-delay-show={500}>
+                    Participated
+                  </div>
                   <div className="ml-2 font-bold col-start-2">{userDao[1]}</div>
                 </div>
               </div>
@@ -546,18 +560,22 @@ export default function DAO() {
                           ? contractTreasury.abi
                           : e.target.value == netSettings.contracts.governanceDAO.contractAddress
                           ? contractGovernanceDAO.abi
+                          : e.target.value == netSettings.contracts.walletDAO.contractAddress
+                          ? contractWalletDAO.abi
                           : ''
                       )
                     )}
                     value={
                       selectedContract == netSettings.contracts.treasury.contractAddress ||
-                      selectedContract == netSettings.contracts.governanceDAO.contractAddress
+                      selectedContract == netSettings.contracts.governanceDAO.contractAddress ||
+                      selectedContract == netSettings.contracts.walletDAO.contractAddress
                         ? selectedContract
                         : ''
                     }
                   >
                     <option value={netSettings.contracts.treasury.contractAddress}>Treasury</option>
                     <option value={netSettings.contracts.governanceDAO.contractAddress}>GovernanceDAO</option>
+                    <option value={netSettings.contracts.walletDAO.contractAddress}>WalletDAO</option>
                     <option value="">Other...</option>
                   </select>
                 </div>
@@ -566,7 +584,8 @@ export default function DAO() {
                   type="text"
                   className={`${
                     selectedContract == netSettings.contracts.treasury.contractAddress ||
-                    selectedContract == netSettings.contracts.governanceDAO.contractAddress
+                    selectedContract == netSettings.contracts.governanceDAO.contractAddress ||
+                    selectedContract == netSettings.contracts.walletDAO.contractAddress
                       ? 'hidden'
                       : ''
                   } mt-2 px-2 py-1 border-2 border-gray-600 rounded-lg w-full`}
@@ -610,10 +629,15 @@ export default function DAO() {
                             ))
                         : ''}
                     </select>
-                    <label htmlFor="params" className="text-sm px-2">
+                    <label htmlFor="params" className={`text-sm px-2 ${selectedFunction && JSON.parse(selectedFunction).inputs.length ? '' : 'hidden'}`}>
                       Parameters
                     </label>
-                    <div id="params" className="px-2 pb-2 border border-gray-400/50 rounded-lg">
+                    <div
+                      id="params"
+                      className={`px-2 pb-2 border border-gray-400/50 rounded-lg ${
+                        selectedFunction && JSON.parse(selectedFunction).inputs.length ? '' : 'hidden'
+                      }`}
+                    >
                       {selectedFunction &&
                         JSON.parse(selectedFunction).inputs.map((inp, index) => (
                           <div key={'params_' + index} className="flex place-items-center">
@@ -711,7 +735,9 @@ export default function DAO() {
                       </div>
                       <div
                         className={`cursor-copy ${
-                          prop[9] == netSettings.contracts.treasury.contractAddress || prop[9] == netSettings.contracts.governanceDAO.contractAddress
+                          prop[9] == netSettings.contracts.treasury.contractAddress ||
+                          prop[9] == netSettings.contracts.governanceDAO.contractAddress ||
+                          prop[9] == netSettings.contracts.walletDAO.contractAddress
                             ? ''
                             : 'font-mono'
                         }`}
@@ -720,6 +746,8 @@ export default function DAO() {
                           ? 'Treasury'
                           : prop[9] == netSettings.contracts.governanceDAO.contractAddress
                           ? 'Governance DAO'
+                          : prop[9] == netSettings.contracts.walletDAO.contractAddress
+                          ? 'Wallet DAO'
                           : prop[9]}
                       </div>
                     </div>
@@ -729,7 +757,9 @@ export default function DAO() {
                       </div>
                       <div
                         className={`cursor-copy ${
-                          prop[9] == netSettings.contracts.treasury.contractAddress || prop[9] == netSettings.contracts.governanceDAO.contractAddress
+                          prop[9] == netSettings.contracts.treasury.contractAddress ||
+                          prop[9] == netSettings.contracts.governanceDAO.contractAddress ||
+                          prop[9] == netSettings.contracts.walletDAO.contractAddress
                             ? ''
                             : 'font-mono'
                         }`}
@@ -738,6 +768,8 @@ export default function DAO() {
                           ? 'Treasury'
                           : prop[9] == netSettings.contracts.governanceDAO.contractAddress
                           ? 'Governance DAO'
+                          : prop[9] == netSettings.contracts.walletDAO.contractAddress
+                          ? 'Wallet DAO'
                           : prop[9].slice(0, 8) + '...' + prop[9].slice(-6)}
                       </div>
                     </div>
@@ -755,6 +787,16 @@ export default function DAO() {
                       <div className="overflow-x-auto">
                         <div className="font-mono">Function: {parseData(prop[10], contractGovernanceDAO.abi).function}</div>
                         {Object.entries(parseData(prop[10], contractGovernanceDAO.abi).params).map((par, index) => (
+                          <div key={'dparam_' + index} className="font-mono">
+                            {par[0]}:{'\u00A0'}
+                            {par[1]}
+                          </div>
+                        ))}
+                      </div>
+                    ) : prop[9] == netSettings.contracts.walletDAO.contractAddress ? (
+                      <div className="overflow-x-auto">
+                        <div className="font-mono">Function: {parseData(prop[10], contractWalletDAO.abi).function}</div>
+                        {Object.entries(parseData(prop[10], contractWalletDAO.abi).params).map((par, index) => (
                           <div key={'dparam_' + index} className="font-mono">
                             {par[0]}:{'\u00A0'}
                             {par[1]}
@@ -784,6 +826,7 @@ export default function DAO() {
                     <div
                       className={`${
                         prop[9] == netSettings.contracts.governanceDAO.contractAddress ||
+                        prop[9] == netSettings.contracts.walletDAO.contractAddress ||
                         prop[9] == netSettings.contracts.treasury.contractAddress ||
                         (knownContracts && knownContracts[prop[9]])
                           ? 'hidden'
@@ -897,7 +940,7 @@ export default function DAO() {
                             data-tooltip-delay-show={500}
                           ></img>
                         </div>
-                      ))}                      
+                      ))}
                     </div>
                     <div className="ml-[4px] flex flex-wrap place-items-center">
                       {prop[8].map((member, index) => (
@@ -975,11 +1018,29 @@ export default function DAO() {
               <path d="M22.6066 21.3934C22.2161 21.0029 21.5829 21.0029 21.1924 21.3934C20.8019 21.7839 20.8019 22.4171 21.1924 22.8076L22.6066 21.3934ZM40.9914 42.6066C41.3819 42.9971 42.0151 42.9971 42.4056 42.6066C42.7961 42.2161 42.7961 41.5829 42.4056 41.1924L40.9914 42.6066ZM21.1924 41.1924C20.8019 41.5829 20.8019 42.2161 21.1924 42.6066C21.5829 42.9971 22.2161 42.9971 22.6066 42.6066L21.1924 41.1924ZM42.4056 22.8076C42.7961 22.4171 42.7961 21.7839 42.4056 21.3934C42.0151 21.0029 41.3819 21.0029 40.9914 21.3934L42.4056 22.8076ZM21.1924 22.8076L40.9914 42.6066L42.4056 41.1924L22.6066 21.3934L21.1924 22.8076ZM22.6066 42.6066L42.4056 22.8076L40.9914 21.3934L21.1924 41.1924L22.6066 42.6066Z" />
             </svg>
           </button>
-          <div className="text-center text-base md:text-xl font-bold pb-4">
-            Community{'\u00A0'}treasury{'\u00A0'}balance
-          </div>
-          <div className="overflow-y-auto max-h-[50vh] grid justify-items-center">
-            <div className="grid justify-items-stretch">
+          <div className="overflow-y-auto max-h-[70vh] grid justify-items-center">
+            <div className="text-center text-base md:text-xl font-bold py-2 sticky top-0 bg-gray-300 w-full">
+              Wallet{'\u00A0'}DAO{'\u00A0'}balance
+            </div>
+            <div>
+              {balancesWalletDAO
+                ? balancesWalletDAO.map((token, index) => (
+                    <div key={'traked_token_DAO_' + index} className={`flex place-items-center px-2 text-sm md:text-base font-mono ${index ? 'cursor-copy' : ''}`}  onClick={() => (index ? (navigator.clipboard.writeText(token.address), setStatus('Token address copied')) : null)}>
+                      <div className="truncate">{token.balance}</div>
+                      <div>
+                        {'\u00A0'}
+                        {token.ticker}
+                        {'\u00A0'}
+                        {'\u00A0'}
+                      </div>
+                    </div>
+                  ))
+                : ''}
+            </div>
+            <div className="text-center text-base md:text-xl font-bold py-2 sticky top-0 bg-gray-300 w-full">
+              Community{'\u00A0'}treasury{'\u00A0'}balance
+            </div>
+            <div>
               <div className="flex justify-items-center px-2 text-sm md:text-base font-mono">
                 <div className="truncate">{balanceDAO[1]}</div>
                 <div>{'\u00A0'}CLO</div>
@@ -987,8 +1048,8 @@ export default function DAO() {
               {trackedTokensDAO
                 ? Object.entries(trackedTokensDAO).map((token, index) => (
                     <div key={'traked_token_' + index} className="flex place-items-center px-2 text-sm md:text-base font-mono">
-                      <div className="truncate">{balancesTrackedTokensDAO[token[0]]}</div>
-                      <div>
+                      <div className="truncate cursor-copy" onClick={() => (navigator.clipboard.writeText(token[0]), setStatus('Token address copied'))}>{balancesTrackedTokensDAO[token[0]]}</div>
+                      <div className="cursor-copy" onClick={() => (navigator.clipboard.writeText(token[0]), setStatus('Token address copied'))}>
                         {'\u00A0'}
                         {token[1]}
                         {'\u00A0'}
@@ -1062,7 +1123,7 @@ export default function DAO() {
                       <div>{user[1].nickname.length > 14 ? user[1].nickname.slice(0, 12) + '...' : user[1].nickname}</div>
                       <div
                         className="cursor-copy"
-                        onClick={() => (navigator.clipboard.writeText(user[1].address), setStatus(user[1].nickname + '\'s address copied'))}
+                        onClick={() => (navigator.clipboard.writeText(user[1].address), setStatus(user[1].nickname + "'s address copied"))}
                       >
                         {user[1].address.slice(0, 8) + '...' + user[1].address.slice(-6)}
                       </div>
@@ -1137,6 +1198,21 @@ export default function DAO() {
                   onClick={() => (navigator.clipboard.writeText(netSettings.contracts.governanceDAO.contractAddress), setStatus('DAO address copied'))}
                 >
                   {netSettings.contracts.governanceDAO.contractAddress.slice(0, 8) + '...' + netSettings.contracts.governanceDAO.contractAddress.slice(-6)}
+                </div>
+              </div>
+              <div className="flex px-2">
+                <div>Wallet DAO:{'\u00A0'}</div>
+                <div
+                  className="hidden md:block font-mono cursor-copy font-bold"
+                  onClick={() => (navigator.clipboard.writeText(netSettings.contracts.walletDAO.contractAddress), setStatus('Wallet DAO address copied'))}
+                >
+                  {netSettings.contracts.walletDAO.contractAddress}
+                </div>
+                <div
+                  className="md:hidden font-mono font-bold"
+                  onClick={() => (navigator.clipboard.writeText(netSettings.contracts.walletDAO.contractAddress), setStatus('Wallet DAO address copied'))}
+                >
+                  {netSettings.contracts.walletDAO.contractAddress.slice(0, 8) + '...' + netSettings.contracts.walletDAO.contractAddress.slice(-6)}
                 </div>
               </div>
               <div className="flex px-2">
