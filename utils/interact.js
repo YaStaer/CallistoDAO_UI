@@ -267,11 +267,10 @@ export const getWalletDAOBalances = async () => {
   return balances
 }
 
-// export const getListBots = async () => {
-//   const resp = await WalletDAOcontract.methods.listBots(0).call()
-// console.log(resp)
-  // return balances
-// }
+export const getListBots = async () => {
+  const resp = await WalletDAOcontract.methods.twoBears_ViewListBots().call()
+  return resp
+}
 
 export const vote = async (wallet, id, answer) => {
   const address = wallet['accounts'][0]['address']

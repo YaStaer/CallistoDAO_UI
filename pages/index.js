@@ -77,7 +77,7 @@ export default function DAO() {
   const [settingsModalActive, setSettingsModalActive] = useState(false)
 
   const [statusCreateBlock, setStatusCreateBlock] = useState(false)
-  const [statusWalletDAO, setStatusWalletDAO] = useState(false)
+  const [walletDAOBotIDsOnTwoBears, setWalletDAOBotIDsOnTwoBears] = useState([])
 
   useEffect(() => {
     setOnboard(initOnboard)
@@ -126,7 +126,6 @@ export default function DAO() {
         JSON.stringify(contractTreasury.abi.filter(func => func.type == 'function' && func.stateMutability != 'view' && func.stateMutability != 'pure')[0])
       )
       setPastedABI(contractTreasury.abi)
-      // await getListBots()
     }
     init()
   }, [])
@@ -198,14 +197,16 @@ export default function DAO() {
 
   useEffect(() => {
     const getBalances = async () => {
-      if (balancesModalActive && trackedTokensDAO) {
-        const balances = {}
-        for (const [key, value] of Object.entries(trackedTokensDAO)) {
-          const balance = await getTreasuryTokenBalanceDAO(key)
-          balances[key] = balance.balance
+      if (balancesModalActive) {
+        if (trackedTokensDAO) {
+          const balances = {}
+          for (const [key, value] of Object.entries(trackedTokensDAO)) {
+            const balance = await getTreasuryTokenBalanceDAO(key)
+            balances[key] = balance.balance
+          }
+          setBalancesTrackedTokensDAO(balances)
         }
         setBalanceDAO(await getTreasuryBalanceDAO())
-        setBalancesTrackedTokensDAO(balances)
         setBalancesWalletDAO(await getWalletDAOBalances())
       }
     }
@@ -220,6 +221,7 @@ export default function DAO() {
         setExpirePeriod(await getExpirePeriod())
         setTotalCloseVoting(await getTotalCloseVoting())
         setTotalVoting(await getTotalVoting())
+        setWalletDAOBotIDsOnTwoBears(await getListBots())
       }
     }
     getSettings()
@@ -496,7 +498,7 @@ export default function DAO() {
               className="fill-gray-700/90 hover:fill-gray-900/90 transition-all"
               onClick={() => setBalancesModalActive(true)}
               data-tooltip-id="tooltip"
-              data-tooltip-content="Treasury balance"
+              data-tooltip-content="Balances"
               data-tooltip-delay-show={500}
             >
               <svg height="32" viewBox="0 0 24 24" width="32" xmlns="http://www.w3.org/2000/svg" className="m-2">
@@ -1027,7 +1029,11 @@ export default function DAO() {
             <div>
               {balancesWalletDAO
                 ? balancesWalletDAO.map((token, index) => (
-                    <div key={'traked_token_DAO_' + index} className={`flex place-items-center px-2 text-sm md:text-base font-mono ${index ? 'cursor-copy' : ''}`}  onClick={() => (index ? (navigator.clipboard.writeText(token.address), setStatus('Token address copied')) : null)}>
+                    <div
+                      key={'traked_token_DAO_' + index}
+                      className={`flex place-items-center px-2 text-sm md:text-base font-mono ${index ? 'cursor-copy' : ''}`}
+                      onClick={() => (index ? (navigator.clipboard.writeText(token.address), setStatus('Token address copied')) : null)}
+                    >
                       <div className="truncate">{token.balance}</div>
                       <div>
                         {'\u00A0'}
@@ -1050,7 +1056,9 @@ export default function DAO() {
               {trackedTokensDAO
                 ? Object.entries(trackedTokensDAO).map((token, index) => (
                     <div key={'traked_token_' + index} className="flex place-items-center px-2 text-sm md:text-base font-mono">
-                      <div className="truncate cursor-copy" onClick={() => (navigator.clipboard.writeText(token[0]), setStatus('Token address copied'))}>{balancesTrackedTokensDAO[token[0]]}</div>
+                      <div className="truncate cursor-copy" onClick={() => (navigator.clipboard.writeText(token[0]), setStatus('Token address copied'))}>
+                        {balancesTrackedTokensDAO[token[0]]}
+                      </div>
                       <div className="cursor-copy" onClick={() => (navigator.clipboard.writeText(token[0]), setStatus('Token address copied'))}>
                         {'\u00A0'}
                         {token[1]}
@@ -1203,7 +1211,9 @@ export default function DAO() {
                 </div>
               </div>
               <div className="flex px-2">
-                <div>Wallet DAO:{'\u00A0'}</div>
+                <div>
+                  Wallet{'\u00A0'}DAO:{'\u00A0'}
+                </div>
                 <div
                   className="hidden md:block font-mono cursor-copy font-bold"
                   onClick={() => (navigator.clipboard.writeText(netSettings.contracts.walletDAO.contractAddress), setStatus('Wallet DAO address copied'))}
@@ -1218,19 +1228,27 @@ export default function DAO() {
                 </div>
               </div>
               <div className="flex px-2">
-                <div>DAO percent of treasury:{'\u00A0'}</div>
+                <div>
+                  DAO{'\u00A0'}percent{'\u00A0'}of{'\u00A0'}treasury:{'\u00A0'}
+                </div>
                 <div className="font-bold">{balanceDAO[0]}%</div>
               </div>
               <div className="flex px-2">
-                <div>Total proposals:{'\u00A0'}</div>
+                <div>
+                  Total{'\u00A0'}proposals:{'\u00A0'}
+                </div>
                 <div className="font-bold">{totalVoting}</div>
               </div>
               <div className="flex px-2">
-                <div>Completed proposals:{'\u00A0'}</div>
+                <div>
+                  Completed{'\u00A0'}proposals:{'\u00A0'}
+                </div>
                 <div className="font-bold">{totalCloseVoting}</div>
               </div>
               <div className="flex px-2">
-                <div>Voting period:{'\u00A0'}</div>
+                <div>
+                  Voting{'\u00A0'}period:{'\u00A0'}
+                </div>
                 <div className={`${expirePeriod[0] ? '' : 'hidden'} font-bold`}>
                   {expirePeriod[0]}
                   {'\u00A0'}days{'\u00A0'}
@@ -1249,17 +1267,38 @@ export default function DAO() {
                 </div>
               </div>
               <div className="flex px-2">
-                <div>Create proposal for members:{'\u00A0'}</div>
+                <div>
+                  Create{'\u00A0'}proposal{'\u00A0'}for{'\u00A0'}members:{'\u00A0'}
+                </div>
                 <div className="font-bold">
                   {minPaymentDAO}
                   {'\u00A0'}CLO
                 </div>
               </div>
               <div className="flex px-2">
-                <div>Create proposal not for members:{'\u00A0'}</div>
+                <div>
+                  Create{'\u00A0'}proposal{'\u00A0'}not{'\u00A0'}for{'\u00A0'}members:{'\u00A0'}
+                </div>
                 <div className="font-bold">
                   {minPaymentOther}
                   {'\u00A0'}CLO
+                </div>
+              </div>
+              <div className="flex px-2">
+                <div>
+                  Active{'\u00A0'}2bears{'\u00A0'}bot{'\u00A0'}IDs:{'\u00A0'}
+                </div>
+                <div className="font-bold flex flex-wrap">
+                  {walletDAOBotIDsOnTwoBears.length
+                    ? walletDAOBotIDsOnTwoBears.map((botID, index) => (
+                        <div key={botID} className="flex">
+                          <div className="cursor-copy" onClick={() => (navigator.clipboard.writeText(botID), setStatus('Bot ID ' + botID + ' copied'))}>
+                            {botID}
+                          </div>
+                          <div className={`pr-1 ${index == walletDAOBotIDsOnTwoBears.length - 1 ? 'hidden' : ''}`}>,</div>
+                        </div>
+                      ))
+                    : '(No active bots)'}
                 </div>
               </div>
             </div>

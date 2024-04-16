@@ -43,14 +43,20 @@ contract WalletDAO {
         string symbol; // символ токена
     }
 
+/* Callisto network testnet
     address public constant DAO = 0xb356A5a5710Cac1677854f1b95608D1d4B4B417d; // Контракт DAO
     address public constant WCLO = 0xbd2D3BCe975FD72E44A73cC8e834aD1B8441BdDa; // Контракт WCLO
     address public constant ColdStaking = 0xBD38997D00295D738BDC258DB4446577f4181Ed7; // Контракт ColdStaking
     address public constant TwoBearsBalances = 0x1501Bffb3D83239214AE55eCE3a4ccd40092c922; // Контракт депозитов на 2bears
     address public constant TwoBearsBots = 0x69b78bF6300a39D186C7850A46ea6CA261c265c3; // Контракт ботов на 2bears
-    
-    uint[] public listBots; // список всех запущенных ботов на 2bears
-    //uint lastIndex; // индекс последнего бота в списке
+*/
+    address public constant DAO = 0x810059e1406dEDAFd1BdCa4E0137CbA306c0Ce36; // Контракт DAO
+    address public constant WCLO = 0xF5AD6F6EDeC824C7fD54A66d241a227F6503aD3a; // Контракт WCLO
+    address public constant ColdStaking = 0x08A7c8be47773546DC5E173d67B0c38AfFfa4b84; // Контракт ColdStaking
+    address public constant TwoBearsBalances = 0x820b5c3835B731DdeB1155ac0b37009E37524a53; // Контракт депозитов на 2bears
+    address public constant TwoBearsBots = 0xc113Ed199eF9380e3f93B0a6e25FA86b7298FB16; // Контракт ботов на 2bears
+
+    uint[] listBots; // список всех запущенных ботов на 2bears
     address[] tokenTrackingList; // список адресов токенов для отcлеживания в UI
 
     event TransferCLO(address indexed _sender, address indexed _recipient, uint _value);
@@ -106,23 +112,9 @@ contract WalletDAO {
         }
     }
 
-/*
-    function _add_ID_listBots(uint _id_bot) private { // Добавление ID нового бота в список
-        listBots[lastIndex] = _id_bot;
-        ++lastIndex;
+    function twoBears_ViewListBots() public view returns (uint[] memory) { // Просмотреть список созданых ботов
+        return (listBots);
     }
-
-    function _del_ID_listBots(uint _id_bot) private { // Удаление ID бота из списка
-        for(uint i; i < lastIndex; i++){
-            if(listBots[i] == _id_bot){
-                --lastIndex;
-                listBots[i] = listBots[lastIndex];
-                delete listBots[lastIndex];
-                break;
-            }
-        }
-    }
-*/
 
 
 
