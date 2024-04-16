@@ -15,6 +15,7 @@ import {
   getAvatar,
   getClaimList,
   getExpirePeriod,
+  getListBots,
   getMinPaymentDAO,
   getMinPaymentOther,
   getProposalsList,
@@ -125,6 +126,7 @@ export default function DAO() {
         JSON.stringify(contractTreasury.abi.filter(func => func.type == 'function' && func.stateMutability != 'view' && func.stateMutability != 'pure')[0])
       )
       setPastedABI(contractTreasury.abi)
+      // await getListBots()
     }
     init()
   }, [])

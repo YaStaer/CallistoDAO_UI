@@ -84,7 +84,7 @@ export const parseData = (data, abi) => {
       result.function = abi[i].name
       const decode_params = web3.eth.abi.decodeParameters(abi[i].inputs, '0x' + data.slice(10))
       for (const p = 0; p < abi[i].inputs.length; p++) {
-        result.params[abi[i].inputs[p].name] = decode_params[p]
+        result.params[abi[i].inputs[p].name] = decode_params[p].toString()
       }
       result.error = ''
     }
@@ -264,10 +264,14 @@ export const getWalletDAOBalances = async () => {
       decimals: resp[i][1]
     })
   }
-  const native = balances.pop()
-  balances.unshift(native)
   return balances
 }
+
+// export const getListBots = async () => {
+//   const resp = await WalletDAOcontract.methods.listBots(0).call()
+// console.log(resp)
+  // return balances
+// }
 
 export const vote = async (wallet, id, answer) => {
   const address = wallet['accounts'][0]['address']
