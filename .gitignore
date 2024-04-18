@@ -8,3 +8,4 @@ test/
 .env
 .eslintrc.json
 .htaccess
+package-lock.json
