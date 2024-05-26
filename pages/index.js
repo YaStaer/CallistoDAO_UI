@@ -1277,7 +1277,7 @@ export default function DAO() {
               </div>
               <div className="flex px-2">
                 <div>
-                  Create{'\u00A0'}proposal{'\u00A0'}not{'\u00A0'}for{'\u00A0'}members:{'\u00A0'}
+                  Create{'\u00A0'}proposal{'\u00A0'}for{'\u00A0'}non-members:{'\u00A0'}
                 </div>
                 <div className="font-bold">
                   {minPaymentOther}
