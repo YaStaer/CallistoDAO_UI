@@ -8,6 +8,7 @@ import {
   claim,
   complete,
   contractGovernanceDAO,
+  contractMonetaryPolicy,
   contractTreasury,
   contractWalletDAO,
   createVoting,
@@ -188,6 +189,10 @@ export default function DAO() {
       }
       if (selectedContract == netSettings.contracts.walletDAO.contractAddress) {
         setPastedABI(contractWalletDAO.abi)
+        document.getElementById('other_contract') ? (document.getElementById('other_contract').value = '') : null
+      }
+      if (selectedContract == netSettings.contracts.monetaryPolicy.contractAddress) {
+        setPastedABI(contractMonetaryPolicy.abi)
         document.getElementById('other_contract') ? (document.getElementById('other_contract').value = '') : null
       }
       document.getElementById('comment') ? (document.getElementById('comment').value = '') : null
@@ -566,13 +571,16 @@ export default function DAO() {
                           ? contractGovernanceDAO.abi
                           : e.target.value == netSettings.contracts.walletDAO.contractAddress
                           ? contractWalletDAO.abi
+                          : e.target.value == netSettings.contracts.monetaryPolicy.contractAddress
+                          ? contractMonetaryPolicy.abi
                           : ''
                       )
                     )}
                     value={
                       selectedContract == netSettings.contracts.treasury.contractAddress ||
                       selectedContract == netSettings.contracts.governanceDAO.contractAddress ||
-                      selectedContract == netSettings.contracts.walletDAO.contractAddress
+                      selectedContract == netSettings.contracts.walletDAO.contractAddress ||
+                      selectedContract == netSettings.contracts.monetaryPolicy.contractAddress
                         ? selectedContract
                         : ''
                     }
@@ -580,6 +588,7 @@ export default function DAO() {
                     <option value={netSettings.contracts.treasury.contractAddress}>Treasury</option>
                     <option value={netSettings.contracts.governanceDAO.contractAddress}>GovernanceDAO</option>
                     <option value={netSettings.contracts.walletDAO.contractAddress}>WalletDAO</option>
+                    <option value={netSettings.contracts.monetaryPolicy.contractAddress}>MonetaryPolicy</option>
                     <option value="">Other...</option>
                   </select>
                 </div>
@@ -589,7 +598,8 @@ export default function DAO() {
                   className={`${
                     selectedContract == netSettings.contracts.treasury.contractAddress ||
                     selectedContract == netSettings.contracts.governanceDAO.contractAddress ||
-                    selectedContract == netSettings.contracts.walletDAO.contractAddress
+                    selectedContract == netSettings.contracts.walletDAO.contractAddress ||
+                    selectedContract == netSettings.contracts.monetaryPolicy.contractAddress
                       ? 'hidden'
                       : ''
                   } mt-2 px-2 py-1 border-2 border-gray-600 rounded-lg w-full`}
@@ -741,7 +751,8 @@ export default function DAO() {
                         className={`cursor-copy ${
                           prop[9] == netSettings.contracts.treasury.contractAddress ||
                           prop[9] == netSettings.contracts.governanceDAO.contractAddress ||
-                          prop[9] == netSettings.contracts.walletDAO.contractAddress
+                          prop[9] == netSettings.contracts.walletDAO.contractAddress ||
+                          prop[9] == netSettings.contracts.monetaryPolicy.contractAddress
                             ? ''
                             : 'font-mono'
                         }`}
@@ -752,6 +763,8 @@ export default function DAO() {
                           ? 'Governance DAO'
                           : prop[9] == netSettings.contracts.walletDAO.contractAddress
                           ? 'Wallet DAO'
+                          : prop[9] == netSettings.contracts.monetaryPolicy.contractAddress
+                          ? 'Monetary Policy'
                           : prop[9]}
                       </div>
                     </div>
@@ -763,7 +776,8 @@ export default function DAO() {
                         className={`cursor-copy ${
                           prop[9] == netSettings.contracts.treasury.contractAddress ||
                           prop[9] == netSettings.contracts.governanceDAO.contractAddress ||
-                          prop[9] == netSettings.contracts.walletDAO.contractAddress
+                          prop[9] == netSettings.contracts.walletDAO.contractAddress ||
+                          prop[9] == netSettings.contracts.monetaryPolicy.contractAddress
                             ? ''
                             : 'font-mono'
                         }`}
@@ -774,6 +788,8 @@ export default function DAO() {
                           ? 'Governance DAO'
                           : prop[9] == netSettings.contracts.walletDAO.contractAddress
                           ? 'Wallet DAO'
+                          : prop[9] == netSettings.contracts.monetaryPolicy.contractAddress
+                          ? 'Monetary Policy'
                           : prop[9].slice(0, 8) + '...' + prop[9].slice(-6)}
                       </div>
                     </div>
@@ -807,6 +823,16 @@ export default function DAO() {
                           </div>
                         ))}
                       </div>
+                    ) : prop[9] == netSettings.contracts.monetaryPolicy.contractAddress ? (
+                      <div className="overflow-x-auto">
+                        <div className="font-mono">Function: {parseData(prop[10], contractMonetaryPolicy.abi).function}</div>
+                        {Object.entries(parseData(prop[10], contractMonetaryPolicy.abi).params).map((par, index) => (
+                          <div key={'dparam_' + index} className="font-mono">
+                            {par[0]}:{'\u00A0'}
+                            {par[1]}
+                          </div>
+                        ))}
+                      </div>
                     ) : knownContracts && knownContracts[prop[9]] ? (
                       <div className="overflow-x-auto">
                         <div className="font-mono">Function: {parseData(prop[10], knownContracts[prop[9]]).function}</div>
@@ -832,6 +858,7 @@ export default function DAO() {
                         prop[9] == netSettings.contracts.governanceDAO.contractAddress ||
                         prop[9] == netSettings.contracts.walletDAO.contractAddress ||
                         prop[9] == netSettings.contracts.treasury.contractAddress ||
+                        prop[9] == netSettings.contracts.monetaryPolicy.contractAddress ||
                         (knownContracts && knownContracts[prop[9]])
                           ? 'hidden'
                           : ''
@@ -1225,6 +1252,23 @@ export default function DAO() {
                   onClick={() => (navigator.clipboard.writeText(netSettings.contracts.walletDAO.contractAddress), setStatus('Wallet DAO address copied'))}
                 >
                   {netSettings.contracts.walletDAO.contractAddress.slice(0, 8) + '...' + netSettings.contracts.walletDAO.contractAddress.slice(-6)}
+                </div>
+              </div>
+              <div className="flex px-2">
+                <div>
+                  Monetary{'\u00A0'}Policy:{'\u00A0'}
+                </div>
+                <div
+                  className="hidden md:block font-mono cursor-copy font-bold"
+                  onClick={() => (navigator.clipboard.writeText(netSettings.contracts.monetaryPolicy.contractAddress), setStatus('Monetary Policy address copied'))}
+                >
+                  {netSettings.contracts.monetaryPolicy.contractAddress}
+                </div>
+                <div
+                  className="md:hidden font-mono font-bold"
+                  onClick={() => (navigator.clipboard.writeText(netSettings.contracts.monetaryPolicy.contractAddress), setStatus('Monetary Policy address copied'))}
+                >
+                  {netSettings.contracts.monetaryPolicy.contractAddress.slice(0, 8) + '...' + netSettings.contracts.monetaryPolicy.contractAddress.slice(-6)}
                 </div>
               </div>
               <div className="flex px-2">

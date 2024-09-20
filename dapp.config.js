@@ -18,6 +18,11 @@ const netSettings = {
       title: 'WalletDAO',
       description: 'Callisto WalletDAO',
       contractAddress: '0x6dd4c097C5f7A57FeAC50D23E53540f4578a0467'
+    },
+    monetaryPolicy: {
+      title: 'MonetaryPolicy',
+      description: 'Callisto MonetaryPolicy',
+      contractAddress: '0x3c0a04dDD9Bd580e152e29b1d702000e7460c299'
     }
   }
 }
