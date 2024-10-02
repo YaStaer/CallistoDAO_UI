@@ -2,7 +2,7 @@ const netSettings = {
   name: 'Callisto DAO',
   logo: '/images/net_img/CLO.png',
   ticker: 'CLO',
-  rpc: 'https://rpc.callisto.network/',
+  rpc: 'https://rpc.callistodao.org/',
   contracts: {
     treasury: {
       title: 'Treasury',
