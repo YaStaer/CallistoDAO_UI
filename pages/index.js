@@ -389,8 +389,17 @@ export default function DAO() {
     const parameters = []
     if (pastedABI) {
       for (const par of document.querySelectorAll('input[id*="parameter_"')) {
-        console.log(par)
-        parameters.push(par.value)
+        // console.log(par)
+        if (par.placeholder == "bool") {
+          // console.log(par.placeholder)
+          if (par.value == "false" || par.value == "False" || par.value == "0") {
+            parameters.push('')
+          } else {
+            parameters.push('1')
+          }
+        } else {
+          parameters.push(par.value)
+        }        
       }
     }
     setStatus(

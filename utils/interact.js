@@ -418,6 +418,7 @@ export const createVoting = async (wallet, isMember, contract, data, func, param
   const address = wallet['accounts'][0]['address']
   const contract_address = ''
   const data_all = ''
+  console.log(contract, data, params, comment)
   try {
     contract_address = Web3.utils.toChecksumAddress(contract)
   } catch (err) {
