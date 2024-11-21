@@ -7,6 +7,7 @@ import {
   cards,
   claim,
   complete,
+  contractDaoApprovedResources,
   contractGovernanceDAO,
   contractMonetaryPolicy,
   contractTreasury,
@@ -193,6 +194,10 @@ export default function DAO() {
       }
       if (selectedContract == netSettings.contracts.monetaryPolicy.contractAddress) {
         setPastedABI(contractMonetaryPolicy.abi)
+        document.getElementById('other_contract') ? (document.getElementById('other_contract').value = '') : null
+      }
+      if (selectedContract == netSettings.contracts.DaoApprovedResources.contractAddress) {
+        setPastedABI(contractDaoApprovedResources.abi)
         document.getElementById('other_contract') ? (document.getElementById('other_contract').value = '') : null
       }
       document.getElementById('comment') ? (document.getElementById('comment').value = '') : null
@@ -392,7 +397,7 @@ export default function DAO() {
         // console.log(par)
         if (par.placeholder == "bool") {
           // console.log(par.placeholder)
-          if (par.value == "false" || par.value == "False" || par.value == "0") {
+          if (par.value.toLowerCase() == "false" || par.value == "0") {
             parameters.push('')
           } else {
             parameters.push('1')
@@ -582,6 +587,8 @@ export default function DAO() {
                           ? contractWalletDAO.abi
                           : e.target.value == netSettings.contracts.monetaryPolicy.contractAddress
                           ? contractMonetaryPolicy.abi
+                          : e.target.value == netSettings.contracts.DaoApprovedResources.contractAddress
+                          ? contractDaoApprovedResources.abi
                           : ''
                       )
                     )}
@@ -589,7 +596,8 @@ export default function DAO() {
                       selectedContract == netSettings.contracts.treasury.contractAddress ||
                       selectedContract == netSettings.contracts.governanceDAO.contractAddress ||
                       selectedContract == netSettings.contracts.walletDAO.contractAddress ||
-                      selectedContract == netSettings.contracts.monetaryPolicy.contractAddress
+                      selectedContract == netSettings.contracts.monetaryPolicy.contractAddress ||
+                      selectedContract == netSettings.contracts.DaoApprovedResources.contractAddress
                         ? selectedContract
                         : ''
                     }
@@ -598,6 +606,7 @@ export default function DAO() {
                     <option value={netSettings.contracts.governanceDAO.contractAddress}>GovernanceDAO</option>
                     <option value={netSettings.contracts.walletDAO.contractAddress}>WalletDAO</option>
                     <option value={netSettings.contracts.monetaryPolicy.contractAddress}>MonetaryPolicy</option>
+                    <option value={netSettings.contracts.DaoApprovedResources.contractAddress}>DaoApprovedResources</option>
                     <option value="">Other...</option>
                   </select>
                 </div>
@@ -608,7 +617,8 @@ export default function DAO() {
                     selectedContract == netSettings.contracts.treasury.contractAddress ||
                     selectedContract == netSettings.contracts.governanceDAO.contractAddress ||
                     selectedContract == netSettings.contracts.walletDAO.contractAddress ||
-                    selectedContract == netSettings.contracts.monetaryPolicy.contractAddress
+                    selectedContract == netSettings.contracts.monetaryPolicy.contractAddress ||
+                    selectedContract == netSettings.contracts.DaoApprovedResources.contractAddress
                       ? 'hidden'
                       : ''
                   } mt-2 px-2 py-1 border-2 border-gray-600 rounded-lg w-full`}
@@ -761,7 +771,8 @@ export default function DAO() {
                           prop[9] == netSettings.contracts.treasury.contractAddress ||
                           prop[9] == netSettings.contracts.governanceDAO.contractAddress ||
                           prop[9] == netSettings.contracts.walletDAO.contractAddress ||
-                          prop[9] == netSettings.contracts.monetaryPolicy.contractAddress
+                          prop[9] == netSettings.contracts.monetaryPolicy.contractAddress ||
+                          prop[9] == netSettings.contracts.DaoApprovedResources.contractAddress
                             ? ''
                             : 'font-mono'
                         }`}
@@ -774,6 +785,8 @@ export default function DAO() {
                           ? 'Wallet DAO'
                           : prop[9] == netSettings.contracts.monetaryPolicy.contractAddress
                           ? 'Monetary Policy'
+                          : prop[9] == netSettings.contracts.DaoApprovedResources.contractAddress
+                          ? 'DAO Approved Resources'
                           : prop[9]}
                       </div>
                     </div>
@@ -786,7 +799,8 @@ export default function DAO() {
                           prop[9] == netSettings.contracts.treasury.contractAddress ||
                           prop[9] == netSettings.contracts.governanceDAO.contractAddress ||
                           prop[9] == netSettings.contracts.walletDAO.contractAddress ||
-                          prop[9] == netSettings.contracts.monetaryPolicy.contractAddress
+                          prop[9] == netSettings.contracts.monetaryPolicy.contractAddress ||
+                          prop[9] == netSettings.contracts.DaoApprovedResources.contractAddress
                             ? ''
                             : 'font-mono'
                         }`}
@@ -799,6 +813,8 @@ export default function DAO() {
                           ? 'Wallet DAO'
                           : prop[9] == netSettings.contracts.monetaryPolicy.contractAddress
                           ? 'Monetary Policy'
+                          : prop[9] == netSettings.contracts.DaoApprovedResources.contractAddress
+                          ? 'DAO Approved Resources'
                           : prop[9].slice(0, 8) + '...' + prop[9].slice(-6)}
                       </div>
                     </div>
@@ -842,6 +858,16 @@ export default function DAO() {
                           </div>
                         ))}
                       </div>
+                    ) : prop[9] == netSettings.contracts.DaoApprovedResources.contractAddress ? (
+                      <div className="overflow-x-auto">
+                        <div className="font-mono">Function: {parseData(prop[10], contractDaoApprovedResources.abi).function}</div>
+                        {Object.entries(parseData(prop[10], contractDaoApprovedResources.abi).params).map((par, index) => (
+                          <div key={'dparam_' + index} className="font-mono">
+                            {par[0]}:{'\u00A0'}
+                            {par[1]}
+                          </div>
+                        ))}
+                      </div>
                     ) : knownContracts && knownContracts[prop[9]] ? (
                       <div className="overflow-x-auto">
                         <div className="font-mono">Function: {parseData(prop[10], knownContracts[prop[9]]).function}</div>
@@ -868,6 +894,7 @@ export default function DAO() {
                         prop[9] == netSettings.contracts.walletDAO.contractAddress ||
                         prop[9] == netSettings.contracts.treasury.contractAddress ||
                         prop[9] == netSettings.contracts.monetaryPolicy.contractAddress ||
+                        prop[9] == netSettings.contracts.DaoApprovedResources.contractAddress ||
                         (knownContracts && knownContracts[prop[9]])
                           ? 'hidden'
                           : ''
@@ -1278,6 +1305,23 @@ export default function DAO() {
                   onClick={() => (navigator.clipboard.writeText(netSettings.contracts.monetaryPolicy.contractAddress), setStatus('Monetary Policy address copied'))}
                 >
                   {netSettings.contracts.monetaryPolicy.contractAddress.slice(0, 8) + '...' + netSettings.contracts.monetaryPolicy.contractAddress.slice(-6)}
+                </div>
+              </div>
+              <div className="flex px-2">
+                <div>
+                  DAO{'\u00A0'}Approved{'\u00A0'}Resources:{'\u00A0'}
+                </div>
+                <div
+                  className="hidden md:block font-mono cursor-copy font-bold"
+                  onClick={() => (navigator.clipboard.writeText(netSettings.contracts.DaoApprovedResources.contractAddress), setStatus('DAO Approved Resources: address copied'))}
+                >
+                  {netSettings.contracts.DaoApprovedResources.contractAddress}
+                </div>
+                <div
+                  className="md:hidden font-mono font-bold"
+                  onClick={() => (navigator.clipboard.writeText(netSettings.contracts.DaoApprovedResources.contractAddress), setStatus('DAO Approved Resources address copied'))}
+                >
+                  {netSettings.contracts.DaoApprovedResources.contractAddress.slice(0, 8) + '...' + netSettings.contracts.DaoApprovedResources.contractAddress.slice(-6)}
                 </div>
               </div>
               <div className="flex px-2">

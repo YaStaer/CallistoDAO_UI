@@ -23,6 +23,11 @@ const netSettings = {
       title: 'MonetaryPolicy',
       description: 'Callisto MonetaryPolicy',
       contractAddress: '0x3c0a04dDD9Bd580e152e29b1d702000e7460c299'
+    },
+    DaoApprovedResources: {
+      title: 'DaoApprovedResources',
+      description: 'Callisto DaoApprovedResources',
+      contractAddress: '0x69A47CF7274ad96c7d5B256588Bba7D4BE2C85b0'
     }
   }
 }

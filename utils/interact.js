@@ -12,6 +12,8 @@ export const contractTreasury = require('../artifacts/contracts/Treasury.sol/Tre
 const TreasuryContract = new web3.eth.Contract(contractTreasury.abi, netSettings.contracts.treasury.contractAddress)
 export const contractMonetaryPolicy = require('../artifacts/contracts/MonetaryPolicy.sol/MonetaryPolicy.json')
 const MonetaryPolicyContract = new web3.eth.Contract(contractMonetaryPolicy.abi, netSettings.contracts.monetaryPolicy.contractAddress)
+export const contractDaoApprovedResources = require('../artifacts/contracts/DaoApprovedResources.sol/DaoApprovedResources.json')
+const DaoApprovedResourcesContract = new web3.eth.Contract(contractDaoApprovedResources.abi, netSettings.contracts.DaoApprovedResources.contractAddress)
 
 const gas_percent = 120
 
